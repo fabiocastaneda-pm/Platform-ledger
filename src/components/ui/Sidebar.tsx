@@ -72,6 +72,12 @@ export function Sidebar() {
             </div>
           </div>
         )}
+        {!collapsed && (
+          <div className="flex items-center justify-between mb-2 px-1">
+            <span className="text-[#969bbd] text-[10px] font-mono">v{__APP_VERSION__}</span>
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/10 text-[#969bbd] font-semibold">PROTO</span>
+          </div>
+        )}
         <button
           onClick={() => setCollapsed(!collapsed)}
           className="flex items-center justify-center w-full h-8 rounded-lg text-white/60 hover:bg-white/10 hover:text-white transition-colors"
