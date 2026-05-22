@@ -9,8 +9,8 @@ import { Badge } from '../../components/ui/Badge'
 import { Card } from '../../components/ui/Card'
 import { EmptyState } from '../../components/ui/EmptyState'
 import { CreateLedgerModal } from './CreateLedgerModal'
-import type { LedgerStatus } from '../../types'
-import { PRODUCTS } from '../../services/mock/ledgers'
+import type { LedgerStatus, LedgerCountry } from '../../types'
+import { PRODUCTS, COUNTRIES } from '../../services/mock/ledgers'
 
 const STATUS_OPTIONS = [
   { value: '', label: 'Todos los estados' },
@@ -24,23 +24,36 @@ const PRODUCT_OPTIONS = [
   ...PRODUCTS.map(p => ({ value: p, label: p })),
 ]
 
+const COUNTRY_OPTIONS = [
+  { value: '', label: 'Todos los países' },
+  ...COUNTRIES,
+]
+
+const FREQUENCY_LABELS: Record<string, string> = {
+  diario: 'Diario', semanal: 'Semanal', quincenal: 'Quincenal', mensual: 'Mensual',
+}
+
 export function LedgerList() {
   const { ledgers } = useAppStore()
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<LedgerStatus | ''>('')
   const [productFilter, setProductFilter] = useState('')
+  const [countryFilter, setCountryFilter] = useState<LedgerCountry | ''>('')
   const [showCreate, setShowCreate] = useState(false)
 
   const filtered = ledgers.filter(l => {
     const matchSearch = l.name.toLowerCase().includes(search.toLowerCase())
     const matchStatus = !statusFilter || l.status === statusFilter
     const matchProduct = !productFilter || l.product === productFilter
-    return matchSearch && matchStatus && matchProduct
+    const matchCountry = !countryFilter || l.country === countryFilter
+    return matchSearch && matchStatus && matchProduct && matchCountry
   })
 
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' })
+
+  const countryLabel = (c: string) => COUNTRIES.find(x => x.value === c)?.label ?? c
 
   return (
     <div className="fade-in">
@@ -69,14 +82,21 @@ export function LedgerList() {
               />
             </div>
           </div>
-          <div className="w-48">
+          <div className="w-40">
             <Select
               options={STATUS_OPTIONS}
               value={statusFilter}
               onChange={e => setStatusFilter(e.target.value as LedgerStatus | '')}
             />
           </div>
-          <div className="w-56">
+          <div className="w-44">
+            <Select
+              options={COUNTRY_OPTIONS}
+              value={countryFilter}
+              onChange={e => setCountryFilter(e.target.value as LedgerCountry | '')}
+            />
+          </div>
+          <div className="w-52">
             <Select
               options={PRODUCT_OPTIONS}
               value={productFilter}
@@ -105,9 +125,11 @@ export function LedgerList() {
                 <tr style={{ background: '#f1f2f6', borderBottom: '2px solid #d2d4e1' }}>
                   <th className="text-left px-4 py-3 text-sm font-semibold text-[#121e6c]">Nombre</th>
                   <th className="text-left px-4 py-3 text-sm font-semibold text-[#121e6c]">Producto</th>
+                  <th className="text-left px-4 py-3 text-sm font-semibold text-[#121e6c]">País</th>
+                  <th className="text-left px-4 py-3 text-sm font-semibold text-[#121e6c]">Frecuencia</th>
                   <th className="text-left px-4 py-3 text-sm font-semibold text-[#121e6c]">Estado</th>
                   <th className="text-left px-4 py-3 text-sm font-semibold text-[#121e6c]">Configs</th>
-                  <th className="text-left px-4 py-3 text-sm font-semibold text-[#121e6c]">Última modificación</th>
+                  <th className="text-left px-4 py-3 text-sm font-semibold text-[#121e6c]">Modificación</th>
                   <th className="text-left px-4 py-3 text-sm font-semibold text-[#121e6c]">Acciones</th>
                 </tr>
               </thead>
@@ -121,10 +143,16 @@ export function LedgerList() {
                     <td className="px-4 py-4">
                       <p className="text-sm font-semibold text-[#121e6c]">{ledger.name}</p>
                       {ledger.description && (
-                        <p className="text-xs text-[#6c759f] truncate max-w-xs">{ledger.description}</p>
+                        <p className="text-xs text-[#6c759f] truncate max-w-[200px]">{ledger.description}</p>
                       )}
                     </td>
                     <td className="px-4 py-4 text-sm text-[#121e6c]">{ledger.product}</td>
+                    <td className="px-4 py-4 text-sm text-[#121e6c]">{countryLabel(ledger.country)}</td>
+                    <td className="px-4 py-4">
+                      <span className="text-xs font-semibold px-2 py-1 rounded-full bg-[#f1f2f6] text-[#3e4983]">
+                        {FREQUENCY_LABELS[ledger.frequency]}
+                      </span>
+                    </td>
                     <td className="px-4 py-4"><Badge status={ledger.status} /></td>
                     <td className="px-4 py-4 text-sm text-[#6c759f]">{ledger.configs.length} tipo{ledger.configs.length !== 1 ? 's' : ''}</td>
                     <td className="px-4 py-4 text-sm text-[#6c759f]">{formatDate(ledger.updatedAt)}</td>

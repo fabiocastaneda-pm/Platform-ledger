@@ -1,4 +1,6 @@
 export type LedgerStatus = 'borrador' | 'activo' | 'inactivo'
+export type LedgerCountry = 'colombia' | 'peru'
+export type LedgerFrequency = 'diario' | 'semanal' | 'quincenal' | 'mensual'
 export type AccountNature = 'debito' | 'credito'
 export type AccountType = 'activo' | 'pasivo' | 'ingreso' | 'egreso' | 'patrimonio'
 export type TxnStatus = 'processed' | 'failed' | 'pending'
@@ -15,6 +17,8 @@ export interface Ledger {
   createdAt: string
   updatedAt: string
   createdBy: string
+  country: LedgerCountry
+  frequency: LedgerFrequency
   configs: AccountingEntryConfig[]
   erpConfig?: ERPConfig
 }

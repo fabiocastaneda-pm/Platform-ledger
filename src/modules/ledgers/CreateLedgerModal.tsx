@@ -4,8 +4,8 @@ import { Button } from '../../components/ui/Button'
 import { Input, Select, Textarea } from '../../components/ui/Input'
 import { useAppStore } from '../../store'
 import { useNavigate } from 'react-router-dom'
-import type { Ledger } from '../../types'
-import { PRODUCTS } from '../../services/mock/ledgers'
+import type { Ledger, LedgerCountry, LedgerFrequency } from '../../types'
+import { PRODUCTS, COUNTRIES, FREQUENCIES } from '../../services/mock/ledgers'
 
 interface Props {
   open: boolean
@@ -19,6 +19,8 @@ export function CreateLedgerModal({ open, onClose }: Props) {
   const navigate = useNavigate()
   const [name, setName] = useState('')
   const [product, setProduct] = useState('')
+  const [country, setCountry] = useState<LedgerCountry | ''>('')
+  const [frequency, setFrequency] = useState<LedgerFrequency | ''>('')
   const [description, setDescription] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
@@ -30,6 +32,8 @@ export function CreateLedgerModal({ open, onClose }: Props) {
     else if (!NAME_REGEX.test(name)) e.name = 'Solo letras, números, guiones y underscores'
     else if (ledgers.some(l => l.name === name)) e.name = 'Ya existe un ledger con este nombre'
     if (!product) e.product = 'Selecciona un producto'
+    if (!country) e.country = 'Selecciona un país'
+    if (!frequency) e.frequency = 'Selecciona una frecuencia'
     if (description.length > 500) e.description = 'Máximo 500 caracteres'
     return e
   }
@@ -45,6 +49,8 @@ export function CreateLedgerModal({ open, onClose }: Props) {
       product,
       description: description.trim() || undefined,
       status: 'borrador',
+      country: country as LedgerCountry,
+      frequency: frequency as LedgerFrequency,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       createdBy: currentUser,
@@ -59,7 +65,7 @@ export function CreateLedgerModal({ open, onClose }: Props) {
   }
 
   const handleClose = () => {
-    setName(''); setProduct(''); setDescription(''); setErrors({})
+    setName(''); setProduct(''); setCountry(''); setFrequency(''); setDescription(''); setErrors({})
     onClose()
   }
 
@@ -93,6 +99,24 @@ export function CreateLedgerModal({ open, onClose }: Props) {
           placeholder="Selecciona un producto..."
           error={errors.product}
         />
+        <div className="grid grid-cols-2 gap-4">
+          <Select
+            label="País *"
+            value={country}
+            onChange={e => { setCountry(e.target.value as LedgerCountry | ''); setErrors(p => ({ ...p, country: '' })) }}
+            options={COUNTRIES}
+            placeholder="Selecciona un país..."
+            error={errors.country}
+          />
+          <Select
+            label="Frecuencia *"
+            value={frequency}
+            onChange={e => { setFrequency(e.target.value as LedgerFrequency | ''); setErrors(p => ({ ...p, frequency: '' })) }}
+            options={FREQUENCIES}
+            placeholder="Selecciona frecuencia..."
+            error={errors.frequency}
+          />
+        </div>
         <Textarea
           label="Descripción"
           value={description}

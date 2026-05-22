@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Settings, Activity, ExternalLink } from 'lucide-react'
+import { ArrowLeft, Settings, Activity, ExternalLink, Upload } from 'lucide-react'
 import { useAppStore } from '../../store'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { Button } from '../../components/ui/Button'
@@ -10,10 +10,9 @@ import { Modal } from '../../components/ui/Modal'
 import { Input, Select, Textarea } from '../../components/ui/Input'
 import { ConfirmModal } from '../../components/ui/Modal'
 import { AccountingConfigTab } from '../accounting/AccountingConfigTab'
-import { ERPConfigTab } from '../erp/ERPConfigTab'
-import { PRODUCTS } from '../../services/mock/ledgers'
+import { PRODUCTS, COUNTRIES, FREQUENCIES } from '../../services/mock/ledgers'
 
-const TABS = ['Información General', 'Configuración Contable', 'Exportación ERP']
+const TABS = ['Información General', 'Configuración Contable']
 
 export function LedgerDetail() {
   const { id } = useParams<{ id: string }>()
@@ -160,6 +159,18 @@ export function LedgerDetail() {
                 <dd className="text-sm text-[#121e6c] mt-0.5">{ledger.description || '—'}</dd>
               </div>
               <div>
+                <dt className="text-xs font-semibold text-[#6c759f] uppercase tracking-wide">País</dt>
+                <dd className="text-sm text-[#121e6c] mt-0.5">
+                  {COUNTRIES.find(c => c.value === ledger.country)?.label ?? ledger.country}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold text-[#6c759f] uppercase tracking-wide">Frecuencia</dt>
+                <dd className="text-sm text-[#121e6c] mt-0.5">
+                  {FREQUENCIES.find(f => f.value === ledger.frequency)?.label ?? ledger.frequency}
+                </dd>
+              </div>
+              <div>
                 <dt className="text-xs font-semibold text-[#6c759f] uppercase tracking-wide">Estado</dt>
                 <dd className="mt-0.5"><Badge status={ledger.status} /></dd>
               </div>
@@ -185,18 +196,25 @@ export function LedgerDetail() {
                 <dd className="text-sm text-[#121e6c] mt-0.5">{ledger.configs.length} tipo(s) de transacción</dd>
               </div>
             </dl>
-            <button
-              className="flex items-center gap-1.5 mt-4 text-sm text-[#121e6c] font-semibold hover:text-[#ee424e] transition-colors"
-              onClick={() => navigate('/audit')}
-            >
-              <ExternalLink size={14} /> Ver historial de cambios
-            </button>
+            <div className="flex flex-col gap-2 mt-4">
+              <button
+                className="flex items-center gap-1.5 text-sm text-[#121e6c] font-semibold hover:text-[#ee424e] transition-colors"
+                onClick={() => navigate('/audit')}
+              >
+                <ExternalLink size={14} /> Ver historial de cambios
+              </button>
+              <button
+                className="flex items-center gap-1.5 text-sm text-[#121e6c] font-semibold hover:text-[#ee424e] transition-colors"
+                onClick={() => navigate('/erp')}
+              >
+                <Upload size={14} /> Configurar exportación ERP
+              </button>
+            </div>
           </Card>
         </div>
       )}
 
       {activeTab === 1 && <AccountingConfigTab ledger={ledger} />}
-      {activeTab === 2 && <ERPConfigTab ledger={ledger} />}
 
       {/* Edit Modal */}
       <Modal

@@ -7,6 +7,7 @@ import { Dashboard } from './modules/monitoring/Dashboard'
 import { TransactionLog } from './modules/monitoring/TransactionLog'
 import { AuditLog } from './modules/audit/AuditLog'
 import { ChartOfAccounts } from './modules/accounts/ChartOfAccounts'
+import { ERPModule } from './modules/erp/ERPModule'
 
 const queryClient = new QueryClient()
 
@@ -23,6 +24,7 @@ function App() {
             <Route path="transactions" element={<TransactionLog />} />
             <Route path="audit" element={<AuditLog />} />
             <Route path="accounts" element={<ChartOfAccounts />} />
+            <Route path="erp" element={<ERPModule />} />
           </Route>
         </Routes>
       </BrowserRouter>

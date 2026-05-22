@@ -7,6 +7,8 @@ export const mockLedgers: Ledger[] = [
     product: 'Cashout Montos Altos',
     description: 'Retiros en efectivo superiores a $2M COP para Tribu Banking',
     status: 'activo',
+    country: 'colombia',
+    frequency: 'diario',
     createdAt: '2026-04-10T09:00:00Z',
     updatedAt: '2026-04-15T14:30:00Z',
     createdBy: 'maria.lopez@bold.co',
@@ -52,6 +54,8 @@ export const mockLedgers: Ledger[] = [
     product: 'Remesas Internacionales',
     description: 'Envíos internacionales de dinero con retención de impuestos',
     status: 'activo',
+    country: 'peru',
+    frequency: 'mensual',
     createdAt: '2026-03-01T08:00:00Z',
     updatedAt: '2026-05-10T16:00:00Z',
     createdBy: 'carlos.mendez@bold.co',
@@ -78,6 +82,8 @@ export const mockLedgers: Ledger[] = [
     product: 'Pagos PSE',
     description: 'Pagos electrónicos mediante PSE',
     status: 'activo',
+    country: 'colombia',
+    frequency: 'semanal',
     createdAt: '2026-02-15T10:00:00Z',
     updatedAt: '2026-03-20T11:00:00Z',
     createdBy: 'maria.lopez@bold.co',
@@ -103,6 +109,8 @@ export const mockLedgers: Ledger[] = [
     product: 'Datáfonos Terminal',
     description: 'Transacciones de datáfonos físicos Bold',
     status: 'inactivo',
+    country: 'colombia',
+    frequency: 'quincenal',
     createdAt: '2025-11-01T08:00:00Z',
     updatedAt: '2026-01-15T09:00:00Z',
     createdBy: 'pedro.garcia@bold.co',
@@ -128,6 +136,8 @@ export const mockLedgers: Ledger[] = [
     product: 'Cashout Express',
     description: 'Retiros express procesados en menos de 1 hora',
     status: 'borrador',
+    country: 'peru',
+    frequency: 'diario',
     createdAt: '2026-05-13T14:00:00Z',
     updatedAt: '2026-05-13T14:00:00Z',
     createdBy: 'maria.lopez@bold.co',
@@ -144,4 +154,16 @@ export const PRODUCTS = [
   'Datáfonos Terminal',
   'Link de Pago',
   'Cobro Recurrente',
+]
+
+export const COUNTRIES = [
+  { value: 'colombia', label: '🇨🇴 Colombia' },
+  { value: 'peru',     label: '🇵🇪 Perú' },
+]
+
+export const FREQUENCIES = [
+  { value: 'diario',    label: 'Diario' },
+  { value: 'semanal',   label: 'Semanal' },
+  { value: 'quincenal', label: 'Quincenal' },
+  { value: 'mensual',   label: 'Mensual' },
 ]
