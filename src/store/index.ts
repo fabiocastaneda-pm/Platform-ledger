@@ -14,7 +14,7 @@ interface AppStore {
   accounts: Account[]
   toasts: Toast[]
   currentUser: string
-  addLedger: (ledger: Ledger) => void
+  addLedger: (ledger: Omit<Ledger, 'internalId'>) => void
   updateLedger: (id: string, updates: Partial<Ledger>) => void
   addToast: (type: Toast['type'], message: string) => void
   removeToast: (id: string) => void
@@ -28,11 +28,24 @@ export const useAppStore = create<AppStore>((set) => ({
   currentUser: 'maria.lopez@bold.co',
 
   addLedger: (ledger) =>
-    set((s) => ({ ledgers: [ledger, ...s.ledgers] })),
+    set((s) => {
+      // internalId counter from length; collision risk if delete is added later
+      const internalId = `LDG-${String(s.ledgers.length + 1).padStart(3, '0')}`
+      const ledgerWithId = { ...ledger, internalId }
+      return { ledgers: [ledgerWithId, ...s.ledgers] }
+    }),
 
   updateLedger: (id, updates) =>
     set((s) => ({
-      ledgers: s.ledgers.map((l) => (l.id === id ? { ...l, ...updates, updatedAt: new Date().toISOString() } : l)),
+      ledgers: s.ledgers.map((l) => {
+        if (l.id !== id) return l
+        const current = l
+        if (current.status === 'inactivo' && (updates as Partial<Ledger>).status !== undefined) {
+          updates = { ...updates }
+          delete (updates as Partial<Ledger>).status
+        }
+        return { ...l, ...updates, updatedAt: new Date().toISOString() }
+      }),
     })),
 
   addToast: (type, message) => {

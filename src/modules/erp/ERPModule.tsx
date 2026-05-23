@@ -39,8 +39,8 @@ export function ERPModule() {
   return (
     <div className="fade-in">
       <PageHeader
-        title="Exportación ERP"
-        breadcrumbs={[{ label: 'Exportación ERP' }]}
+        title="Integraciones"
+        breadcrumbs={[{ label: 'Integraciones' }]}
       />
 
       {/* Summary cards */}

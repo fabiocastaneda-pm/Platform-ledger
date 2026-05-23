@@ -1,4 +1,4 @@
-import type { Ledger } from '../../types'
+import type { Ledger, LedgerCompany, LedgerCurrency } from '../../types'
 
 export const mockLedgers: Ledger[] = [
   {
@@ -9,6 +9,9 @@ export const mockLedgers: Ledger[] = [
     status: 'activo',
     country: 'colombia',
     frequency: 'diario',
+    company: 'CF',
+    currency: 'COP',
+    internalId: 'LDG-001',
     createdAt: '2026-04-10T09:00:00Z',
     updatedAt: '2026-04-15T14:30:00Z',
     createdBy: 'maria.lopez@bold.co',
@@ -56,6 +59,9 @@ export const mockLedgers: Ledger[] = [
     status: 'activo',
     country: 'peru',
     frequency: 'mensual',
+    company: 'CF',
+    currency: 'USD',
+    internalId: 'LDG-002',
     createdAt: '2026-03-01T08:00:00Z',
     updatedAt: '2026-05-10T16:00:00Z',
     createdBy: 'carlos.mendez@bold.co',
@@ -84,6 +90,9 @@ export const mockLedgers: Ledger[] = [
     status: 'activo',
     country: 'colombia',
     frequency: 'semanal',
+    company: 'SAS',
+    currency: 'COP',
+    internalId: 'LDG-003',
     createdAt: '2026-02-15T10:00:00Z',
     updatedAt: '2026-03-20T11:00:00Z',
     createdBy: 'maria.lopez@bold.co',
@@ -111,6 +120,9 @@ export const mockLedgers: Ledger[] = [
     status: 'inactivo',
     country: 'colombia',
     frequency: 'quincenal',
+    company: 'CF',
+    currency: 'COP',
+    internalId: 'LDG-004',
     createdAt: '2025-11-01T08:00:00Z',
     updatedAt: '2026-01-15T09:00:00Z',
     createdBy: 'pedro.garcia@bold.co',
@@ -138,6 +150,9 @@ export const mockLedgers: Ledger[] = [
     status: 'borrador',
     country: 'peru',
     frequency: 'diario',
+    company: 'Capital',
+    currency: 'COP',
+    internalId: 'LDG-005',
     createdAt: '2026-05-13T14:00:00Z',
     updatedAt: '2026-05-13T14:00:00Z',
     createdBy: 'maria.lopez@bold.co',
@@ -166,4 +181,17 @@ export const FREQUENCIES = [
   { value: 'semanal',   label: 'Semanal' },
   { value: 'quincenal', label: 'Quincenal' },
   { value: 'mensual',   label: 'Mensual' },
+]
+
+export const COMPANIES: { value: LedgerCompany; label: string }[] = [
+  { value: 'CF',      label: 'Bold CF' },
+  { value: 'SAS',     label: 'Bold SAS' },
+  { value: 'Capital', label: 'Bold Capital' },
+  { value: 'Peru',    label: 'Bold Perú' },
+]
+
+export const CURRENCIES: { value: LedgerCurrency; label: string }[] = [
+  { value: 'COP', label: 'COP — Peso Colombiano' },
+  { value: 'USD', label: 'USD — Dólar Estadounidense' },
+  { value: 'PEN', label: 'PEN — Sol Peruano' },
 ]

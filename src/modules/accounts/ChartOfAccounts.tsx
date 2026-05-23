@@ -7,7 +7,7 @@ import { Badge } from '../../components/ui/Badge'
 import { Modal } from '../../components/ui/Modal'
 import { Input, Select } from '../../components/ui/Input'
 import { useAppStore } from '../../store'
-import type { AccountType } from '../../types'
+import type { AccountType, AccountLevel } from '../../types'
 
 const TYPE_OPTIONS = [
   { value: '', label: 'Todos los tipos' },
@@ -34,6 +34,7 @@ export function ChartOfAccounts() {
   const [code, setCode] = useState('')
   const [name, setName] = useState('')
   const [type, setType] = useState<AccountType>('activo')
+  const [level, setLevel] = useState<AccountLevel>('auxiliar')
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
 
@@ -65,11 +66,11 @@ export function ChartOfAccounts() {
     if (Object.keys(e).length) { setErrors(e); return }
     setLoading(true)
     await new Promise(r => setTimeout(r, 400))
-    addAccount({ code: code.trim(), name: name.trim(), type, status: 'activa' })
+    addAccount({ code: code.trim(), name: name.trim(), type, status: 'activa', level })
     addToast('success', `Cuenta ${code} – ${name} creada`)
     setLoading(false)
     setShowCreate(false)
-    setCode(''); setName(''); setType('activo'); setErrors({})
+    setCode(''); setName(''); setType('activo'); setLevel('auxiliar'); setErrors({})
   }
 
   return (
@@ -177,6 +178,16 @@ export function ChartOfAccounts() {
               { value: 'ingreso', label: 'Ingreso' },
               { value: 'egreso', label: 'Egreso' },
               { value: 'patrimonio', label: 'Patrimonio' },
+            ]}
+          />
+          <Select
+            label="Nivel"
+            value={level}
+            onChange={e => setLevel(e.target.value as AccountLevel)}
+            options={[
+              { value: 'grupo', label: 'Grupo' },
+              { value: 'cuenta', label: 'Cuenta' },
+              { value: 'auxiliar', label: 'Auxiliar' },
             ]}
           />
         </div>

@@ -4,8 +4,8 @@ import { Button } from '../../components/ui/Button'
 import { Input, Select, Textarea } from '../../components/ui/Input'
 import { useAppStore } from '../../store'
 import { useNavigate } from 'react-router-dom'
-import type { Ledger, LedgerCountry, LedgerFrequency } from '../../types'
-import { PRODUCTS, COUNTRIES, FREQUENCIES } from '../../services/mock/ledgers'
+import type { Ledger, LedgerCountry, LedgerFrequency, LedgerCompany, LedgerCurrency } from '../../types'
+import { PRODUCTS, COUNTRIES, FREQUENCIES, COMPANIES, CURRENCIES } from '../../services/mock/ledgers'
 
 interface Props {
   open: boolean
@@ -21,6 +21,8 @@ export function CreateLedgerModal({ open, onClose }: Props) {
   const [product, setProduct] = useState('')
   const [country, setCountry] = useState<LedgerCountry | ''>('')
   const [frequency, setFrequency] = useState<LedgerFrequency | ''>('')
+  const [company, setCompany] = useState<LedgerCompany | ''>('')
+  const [currency, setCurrency] = useState<LedgerCurrency | ''>('')
   const [description, setDescription] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
@@ -32,6 +34,8 @@ export function CreateLedgerModal({ open, onClose }: Props) {
     else if (!NAME_REGEX.test(name)) e.name = 'Solo letras, números, guiones y underscores'
     else if (ledgers.some(l => l.name === name)) e.name = 'Ya existe un ledger con este nombre'
     if (!product) e.product = 'Selecciona un producto'
+    if (!company) e.company = 'Selecciona una compañía'
+    if (!currency) e.currency = 'Selecciona una moneda'
     if (!country) e.country = 'Selecciona un país'
     if (!frequency) e.frequency = 'Selecciona una frecuencia'
     if (description.length > 500) e.description = 'Máximo 500 caracteres'
@@ -43,7 +47,7 @@ export function CreateLedgerModal({ open, onClose }: Props) {
     if (Object.keys(e).length) { setErrors(e); return }
     setLoading(true)
     await new Promise(r => setTimeout(r, 800))
-    const newLedger: Ledger = {
+    const newLedger: Omit<Ledger, 'internalId'> = {
       id: `ldg-${crypto.randomUUID().slice(0, 8)}`,
       name: name.trim(),
       product,
@@ -51,6 +55,8 @@ export function CreateLedgerModal({ open, onClose }: Props) {
       status: 'borrador',
       country: country as LedgerCountry,
       frequency: frequency as LedgerFrequency,
+      company: company as LedgerCompany,
+      currency: currency as LedgerCurrency,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       createdBy: currentUser,
@@ -65,7 +71,7 @@ export function CreateLedgerModal({ open, onClose }: Props) {
   }
 
   const handleClose = () => {
-    setName(''); setProduct(''); setCountry(''); setFrequency(''); setDescription(''); setErrors({})
+    setName(''); setProduct(''); setCountry(''); setFrequency(''); setCompany(''); setCurrency(''); setDescription(''); setErrors({})
     onClose()
   }
 
@@ -99,6 +105,24 @@ export function CreateLedgerModal({ open, onClose }: Props) {
           placeholder="Selecciona un producto..."
           error={errors.product}
         />
+        <div className="grid grid-cols-2 gap-4">
+          <Select
+            label="Compañía *"
+            value={company}
+            onChange={e => { setCompany(e.target.value as LedgerCompany | ''); setErrors(p => ({ ...p, company: '' })) }}
+            options={COMPANIES}
+            placeholder="Selecciona una compañía..."
+            error={errors.company}
+          />
+          <Select
+            label="Moneda *"
+            value={currency}
+            onChange={e => { setCurrency(e.target.value as LedgerCurrency | ''); setErrors(p => ({ ...p, currency: '' })) }}
+            options={CURRENCIES}
+            placeholder="Selecciona una moneda..."
+            error={errors.currency}
+          />
+        </div>
         <div className="grid grid-cols-2 gap-4">
           <Select
             label="País *"

@@ -10,7 +10,7 @@ import { Modal } from '../../components/ui/Modal'
 import { Input, Select, Textarea } from '../../components/ui/Input'
 import { ConfirmModal } from '../../components/ui/Modal'
 import { AccountingConfigTab } from '../accounting/AccountingConfigTab'
-import { PRODUCTS, COUNTRIES, FREQUENCIES } from '../../services/mock/ledgers'
+import { PRODUCTS, COUNTRIES, FREQUENCIES, COMPANIES, CURRENCIES } from '../../services/mock/ledgers'
 
 const TABS = ['Información General', 'Configuración Contable']
 
@@ -108,11 +108,6 @@ export function LedgerDetail() {
                 Desactivar
               </Button>
             )}
-            {ledger.status === 'inactivo' && (
-              <Button onClick={() => setShowActivate(true)}>
-                <Activity size={16} /> Reactivar
-              </Button>
-            )}
             <Button variant="secondary" onClick={openEdit}>
               <Settings size={16} /> Editar
             </Button>
@@ -145,6 +140,22 @@ export function LedgerDetail() {
               <div>
                 <dt className="text-xs font-semibold text-[#6c759f] uppercase tracking-wide">ID</dt>
                 <dd className="text-sm font-mono text-[#121e6c] mt-0.5">{ledger.id}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold text-[#6c759f] uppercase tracking-wide">ID Interno</dt>
+                <dd className="text-sm font-mono text-[#121e6c] mt-0.5">{ledger.internalId}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold text-[#6c759f] uppercase tracking-wide">Compañía</dt>
+                <dd className="text-sm text-[#121e6c] mt-0.5">
+                  {COMPANIES.find(c => c.value === ledger.company)?.label ?? ledger.company}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold text-[#6c759f] uppercase tracking-wide">Moneda</dt>
+                <dd className="text-sm text-[#121e6c] mt-0.5">
+                  {CURRENCIES.find(c => c.value === ledger.currency)?.label ?? ledger.currency}
+                </dd>
               </div>
               <div>
                 <dt className="text-xs font-semibold text-[#6c759f] uppercase tracking-wide">Nombre</dt>
@@ -207,7 +218,7 @@ export function LedgerDetail() {
                 className="flex items-center gap-1.5 text-sm text-[#121e6c] font-semibold hover:text-[#ee424e] transition-colors"
                 onClick={() => navigate('/erp')}
               >
-                <Upload size={14} /> Configurar exportación ERP
+                <Upload size={14} /> Configurar Integraciones
               </button>
             </div>
           </Card>
@@ -256,9 +267,9 @@ export function LedgerDetail() {
         open={showActivate}
         onClose={() => setShowActivate(false)}
         onConfirm={handleActivate}
-        title={ledger.status === 'inactivo' ? 'Reactivar Ledger' : 'Activar Ledger'}
+        title="Activar Ledger"
         message="Este ledger comenzará a procesar transacciones reales. Asegúrate de que la configuración contable esté completa."
-        confirmLabel={ledger.status === 'inactivo' ? 'Reactivar' : 'Activar'}
+        confirmLabel="Activar"
         variant="primary"
         loading={loading}
       />

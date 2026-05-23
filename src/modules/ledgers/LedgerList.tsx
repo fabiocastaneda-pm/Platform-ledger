@@ -124,6 +124,7 @@ export function LedgerList() {
               <thead>
                 <tr style={{ background: '#f1f2f6', borderBottom: '2px solid #d2d4e1' }}>
                   <th className="text-left px-4 py-3 text-sm font-semibold text-[#121e6c]">Nombre</th>
+                  <th className="text-left px-4 py-3 text-sm font-semibold text-[#121e6c]">ID Interno</th>
                   <th className="text-left px-4 py-3 text-sm font-semibold text-[#121e6c]">Producto</th>
                   <th className="text-left px-4 py-3 text-sm font-semibold text-[#121e6c]">País</th>
                   <th className="text-left px-4 py-3 text-sm font-semibold text-[#121e6c]">Frecuencia</th>
@@ -146,7 +147,15 @@ export function LedgerList() {
                         <p className="text-xs text-[#6c759f] truncate max-w-[200px]">{ledger.description}</p>
                       )}
                     </td>
-                    <td className="px-4 py-4 text-sm text-[#121e6c]">{ledger.product}</td>
+                    <td className="px-4 py-4">
+                      <span className="text-xs font-mono font-semibold px-2 py-1 rounded bg-[#f1f2f6] text-[#3e4983]">
+                        {ledger.internalId}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 text-sm text-[#121e6c]">
+                      <p>{ledger.product}</p>
+                      <p className="text-xs text-[#6c759f]">{ledger.company}</p>
+                    </td>
                     <td className="px-4 py-4 text-sm text-[#121e6c]">{countryLabel(ledger.country)}</td>
                     <td className="px-4 py-4">
                       <span className="text-xs font-semibold px-2 py-1 rounded-full bg-[#f1f2f6] text-[#3e4983]">

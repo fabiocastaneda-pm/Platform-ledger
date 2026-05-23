@@ -1,3 +1,6 @@
+export type LedgerCompany = 'CF' | 'SAS' | 'Capital' | 'Peru'
+export type LedgerCurrency = 'COP' | 'USD' | 'PEN'
+export type AccountLevel = 'grupo' | 'cuenta' | 'auxiliar'
 export type LedgerStatus = 'borrador' | 'activo' | 'inactivo'
 export type LedgerCountry = 'colombia' | 'peru'
 export type LedgerFrequency = 'diario' | 'semanal' | 'quincenal' | 'mensual'
@@ -19,6 +22,9 @@ export interface Ledger {
   createdBy: string
   country: LedgerCountry
   frequency: LedgerFrequency
+  company: LedgerCompany
+  currency: LedgerCurrency
+  internalId: string
   configs: AccountingEntryConfig[]
   erpConfig?: ERPConfig
 }
@@ -28,6 +34,7 @@ export interface AccountingEntryConfig {
   ledgerId: string
   transactionType: string
   description?: string
+  accountingNote?: string
   fieldMappings: FieldMapping[]
   createdAt: string
   version: number
@@ -46,6 +53,7 @@ export interface Account {
   name: string
   type: AccountType
   status: 'activa' | 'inactiva'
+  level: AccountLevel
 }
 
 export interface Transaction {

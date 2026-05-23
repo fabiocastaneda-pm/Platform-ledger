@@ -75,14 +75,19 @@ export function AccountingConfigTab({ ledger }: Props) {
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
   const [txType, setTxType] = useState('')
   const [description, setDescription] = useState('')
+  const [accountingNote, setAccountingNote] = useState('')
   const [mappings, setMappings] = useState<FieldMapping[]>([])
+  const [grupoSels, setGrupoSels] = useState<string[]>([])
+  const [cuentaSels, setCuentaSels] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const openCreate = () => {
     setEditingConfig(null)
-    setTxType(''); setDescription('')
+    setTxType(''); setDescription(''); setAccountingNote('')
     setMappings([{ id: crypto.randomUUID(), fieldName: '', accountCode: '', accountName: '', nature: 'debito' }])
+    setGrupoSels([''])
+    setCuentaSels([''])
     setErrors({})
     setShowModal(true)
   }
@@ -91,16 +96,42 @@ export function AccountingConfigTab({ ledger }: Props) {
     setEditingConfig(cfg)
     setTxType(cfg.transactionType)
     setDescription(cfg.description || '')
+    setAccountingNote(cfg.accountingNote || '')
     setMappings(cfg.fieldMappings.map(m => ({ ...m })))
+    const derivedGrupos = cfg.fieldMappings.map(m => {
+      const aux = accounts.find(a => a.code === m.accountCode && a.level === 'auxiliar')
+      if (!aux) return ''
+      const cuenta = accounts.find(a => a.level === 'cuenta' && aux.code.startsWith(a.code.slice(0, 6)))
+      if (!cuenta) return ''
+      const grupo = accounts.find(a => a.level === 'grupo' && cuenta.code.startsWith(a.code.slice(0, 4)))
+      return grupo?.code || ''
+    })
+    const derivedCuentas = cfg.fieldMappings.map(m => {
+      const aux = accounts.find(a => a.code === m.accountCode && a.level === 'auxiliar')
+      if (!aux) return ''
+      const cuenta = accounts.find(a => a.level === 'cuenta' && aux.code.startsWith(a.code.slice(0, 6)))
+      return cuenta?.code || ''
+    })
+    setGrupoSels(derivedGrupos)
+    setCuentaSels(derivedCuentas)
     setErrors({})
     setShowModal(true)
   }
 
-  const addMapping = () =>
+  const addMapping = () => {
     setMappings(p => [...p, { id: crypto.randomUUID(), fieldName: '', accountCode: '', accountName: '', nature: 'debito' }])
+    setGrupoSels(p => [...p, ''])
+    setCuentaSels(p => [...p, ''])
+  }
 
-  const removeMapping = (id: string) =>
+  const removeMapping = (id: string) => {
+    const idx = mappings.findIndex(m => m.id === id)
     setMappings(p => p.filter(m => m.id !== id))
+    if (idx >= 0) {
+      setGrupoSels(p => p.filter((_, i) => i !== idx))
+      setCuentaSels(p => p.filter((_, i) => i !== idx))
+    }
+  }
 
   const updateMapping = (id: string, key: keyof FieldMapping, value: string) => {
     setMappings(p => p.map(m => {
@@ -134,6 +165,7 @@ export function AccountingConfigTab({ ledger }: Props) {
       ledgerId: ledger.id,
       transactionType: txType.trim(),
       description: description.trim() || undefined,
+      accountingNote: accountingNote.trim() || undefined,
       fieldMappings: mappings,
       createdAt: editingConfig?.createdAt || new Date().toISOString(),
       version: (editingConfig?.version || 0) + (editingConfig ? 1 : 1),
@@ -157,6 +189,18 @@ export function AccountingConfigTab({ ledger }: Props) {
     addToast('success', 'Configuración eliminada')
     setLoading(false)
     setDeleteTarget(null)
+  }
+
+  const grupos = accounts.filter(a => a.level === 'grupo' && a.status === 'activa')
+
+  function getCuentas(grupoCode: string) {
+    if (!grupoCode) return []
+    return accounts.filter(a => a.level === 'cuenta' && a.status === 'activa' && a.code.startsWith(grupoCode.slice(0, 4)))
+  }
+
+  function getAuxiliares(cuentaCode: string) {
+    if (!cuentaCode) return []
+    return accounts.filter(a => a.level === 'auxiliar' && a.status === 'activa' && a.code.startsWith(cuentaCode.slice(0, 6)))
   }
 
   return (
@@ -186,6 +230,7 @@ export function AccountingConfigTab({ ledger }: Props) {
                   <span className="text-xs text-[#969bbd] bg-[#f1f2f6] px-2 py-0.5 rounded-full">v{cfg.version}</span>
                 </div>
                 {cfg.description && <p className="text-sm text-[#6c759f]">{cfg.description}</p>}
+                {cfg.accountingNote && <p className="text-xs italic text-[#969bbd] mt-0.5">{cfg.accountingNote}</p>}
               </div>
               <div className="flex gap-2">
                 <button onClick={() => openEdit(cfg)} className="p-2 rounded-lg hover:bg-[#f1f2f6] text-[#6c759f] hover:text-[#121e6c] transition-colors" title="Editar">
@@ -253,6 +298,12 @@ export function AccountingConfigTab({ ledger }: Props) {
             onChange={e => setDescription(e.target.value)}
             placeholder="Describe este tipo de transacción..."
           />
+          <Input
+            label="Nota Contable"
+            value={accountingNote}
+            onChange={e => setAccountingNote(e.target.value)}
+            placeholder="Nota contable para este tipo de transacción"
+          />
 
           <div>
             <div className="flex justify-between items-center mb-3">
@@ -264,7 +315,7 @@ export function AccountingConfigTab({ ledger }: Props) {
             {errors.mappings && <p className="text-xs font-semibold text-[#ee424e] mb-2">{errors.mappings}</p>}
             <div className="space-y-2">
               {mappings.map((m, i) => (
-                <div key={m.id} className="grid grid-cols-[1fr_1fr_auto_auto] gap-2 items-start">
+                <div key={m.id} className="grid grid-cols-[1fr_2fr_auto_auto] gap-2 items-start">
                   <div>
                     {i === 0 && <p className="text-xs font-semibold text-[#6c759f] mb-1">Campo</p>}
                     <input
@@ -275,17 +326,50 @@ export function AccountingConfigTab({ ledger }: Props) {
                     />
                   </div>
                   <div>
-                    {i === 0 && <p className="text-xs font-semibold text-[#6c759f] mb-1">Cuenta</p>}
-                    <select
-                      value={m.accountCode}
-                      onChange={e => updateMapping(m.id, 'accountCode', e.target.value)}
-                      className="h-10 px-3 w-full rounded-lg border border-[#d2d4e1] text-sm text-[#121e6c] focus:outline-none focus:border-[#121e6c] bg-white cursor-pointer"
-                    >
-                      <option value="">Seleccionar cuenta...</option>
-                      {accounts.filter(a => a.status === 'activa').map(a => (
-                        <option key={a.code} value={a.code}>{a.code} – {a.name}</option>
-                      ))}
-                    </select>
+                    {i === 0 && <p className="text-xs font-semibold text-[#6c759f] mb-1">Cuenta Auxiliar</p>}
+                    <div className="flex flex-col gap-1">
+                      <select
+                        value={grupoSels[i] || ''}
+                        onChange={e => {
+                          const val = e.target.value
+                          setGrupoSels(p => p.map((v, idx) => idx === i ? val : v))
+                          setCuentaSels(p => p.map((v, idx) => idx === i ? '' : v))
+                          updateMapping(m.id, 'accountCode', '')
+                        }}
+                        className="h-9 px-2 w-full rounded-lg border border-[#d2d4e1] text-xs text-[#121e6c] focus:outline-none focus:border-[#121e6c] bg-white cursor-pointer"
+                      >
+                        <option value="">Grupo...</option>
+                        {grupos.map(a => (
+                          <option key={a.code} value={a.code}>{a.code} – {a.name}</option>
+                        ))}
+                      </select>
+                      <select
+                        value={cuentaSels[i] || ''}
+                        onChange={e => {
+                          const val = e.target.value
+                          setCuentaSels(p => p.map((v, idx) => idx === i ? val : v))
+                          updateMapping(m.id, 'accountCode', '')
+                        }}
+                        disabled={!grupoSels[i]}
+                        className="h-9 px-2 w-full rounded-lg border border-[#d2d4e1] text-xs text-[#121e6c] focus:outline-none focus:border-[#121e6c] bg-white cursor-pointer disabled:opacity-40"
+                      >
+                        <option value="">Cuenta...</option>
+                        {getCuentas(grupoSels[i] || '').map(a => (
+                          <option key={a.code} value={a.code}>{a.code} – {a.name}</option>
+                        ))}
+                      </select>
+                      <select
+                        value={m.accountCode}
+                        onChange={e => updateMapping(m.id, 'accountCode', e.target.value)}
+                        disabled={!cuentaSels[i]}
+                        className="h-9 px-2 w-full rounded-lg border border-[#d2d4e1] text-xs text-[#121e6c] focus:outline-none focus:border-[#121e6c] bg-white cursor-pointer disabled:opacity-40"
+                      >
+                        <option value="">Auxiliar...</option>
+                        {getAuxiliares(cuentaSels[i] || '').map(a => (
+                          <option key={a.code} value={a.code}>{a.code} – {a.name}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                   <div>
                     {i === 0 && <p className="text-xs font-semibold text-[#6c759f] mb-1">Naturaleza</p>}

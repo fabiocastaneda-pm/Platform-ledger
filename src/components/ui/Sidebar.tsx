@@ -5,7 +5,7 @@ import { useAppStore } from '../../store'
 
 const navItems = [
   { to: '/ledgers', icon: BookOpen, label: 'Ledgers' },
-  { to: '/erp', icon: Upload, label: 'Exportación ERP' },
+  { to: '/erp', icon: Upload, label: 'Integraciones' },
   { to: '/monitoring', icon: Activity, label: 'Monitoreo' },
   { to: '/transactions', icon: Receipt, label: 'Transacciones' },
   { to: '/accounts', icon: Database, label: 'Plan de Cuentas' },
