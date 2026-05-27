@@ -115,16 +115,17 @@ export function LedgerDetail() {
         }
       />
 
-      {/* Tabs */}
-      <div className="flex gap-0 border-b-2 border-[#d2d4e1] mb-6">
+      {/* Tabs — patrón Merlin: underline activo Coral #FF2947 */}
+      <div className="flex gap-0 mb-6" style={{ borderBottom: '2px solid #F1F2F6' }}>
         {TABS.map((tab, i) => (
           <button
             key={tab}
             onClick={() => setActiveTab(i)}
             className={`h-12 px-6 text-sm font-semibold transition-all duration-150 border-b-[3px] -mb-[2px]
               ${activeTab === i
-                ? 'text-[#121e6c] border-[#ee424e]'
-                : 'text-[#6c759f] border-transparent hover:text-[#3e4983]'}`}
+                ? 'border-[#FF2947]'
+                : 'border-transparent hover:text-[#3E4983]'}`}
+            style={{ color: activeTab === i ? '#121E6C' : '#606060' }}
           >
             {tab}
           </button>

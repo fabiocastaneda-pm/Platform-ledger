@@ -73,12 +73,13 @@ export function LedgerList() {
         <div className="flex flex-wrap gap-4 items-end">
           <div className="flex-1 min-w-[200px]">
             <div className="relative">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#969bbd]" />
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#969696' }} />
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Buscar por nombre..."
-                className="h-12 w-full pl-10 pr-4 rounded-lg border border-[#d2d4e1] text-sm focus:outline-none focus:border-2 focus:border-[#121e6c] bg-white text-[#121e6c] placeholder:text-[#969bbd]"
+                className="h-12 w-full pl-10 pr-4 border border-[#969696] text-sm focus:outline-none focus:border-2 focus:border-[#FF2947] bg-white text-[#121E6C] placeholder:text-[#606060]"
+                style={{ borderRadius: '12px' }}
               />
             </div>
           </div>
@@ -103,7 +104,7 @@ export function LedgerList() {
               onChange={e => setProductFilter(e.target.value)}
             />
           </div>
-          <p className="text-sm text-[#6c759f]">
+          <p className="text-sm" style={{ color: '#606060' }}>
             {filtered.length} ledger{filtered.length !== 1 ? 's' : ''}
           </p>
         </div>
@@ -122,23 +123,23 @@ export function LedgerList() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr style={{ background: '#f1f2f6', borderBottom: '2px solid #d2d4e1' }}>
-                  <th className="text-left px-4 py-3 text-sm font-semibold text-[#121e6c]">Nombre</th>
-                  <th className="text-left px-4 py-3 text-sm font-semibold text-[#121e6c]">ID Interno</th>
-                  <th className="text-left px-4 py-3 text-sm font-semibold text-[#121e6c]">Producto</th>
-                  <th className="text-left px-4 py-3 text-sm font-semibold text-[#121e6c]">País</th>
-                  <th className="text-left px-4 py-3 text-sm font-semibold text-[#121e6c]">Frecuencia</th>
-                  <th className="text-left px-4 py-3 text-sm font-semibold text-[#121e6c]">Estado</th>
-                  <th className="text-left px-4 py-3 text-sm font-semibold text-[#121e6c]">Configs</th>
-                  <th className="text-left px-4 py-3 text-sm font-semibold text-[#121e6c]">Modificación</th>
-                  <th className="text-left px-4 py-3 text-sm font-semibold text-[#121e6c]">Acciones</th>
+                <tr style={{ background: '#F1F2F6', borderBottom: '2px solid #F1F2F6' }}>
+                  <th className="text-left px-4 py-3 text-sm font-semibold" style={{ color: '#121E6C' }}>Nombre</th>
+                  <th className="text-left px-4 py-3 text-sm font-semibold" style={{ color: '#121E6C' }}>ID Interno</th>
+                  <th className="text-left px-4 py-3 text-sm font-semibold" style={{ color: '#121E6C' }}>Producto</th>
+                  <th className="text-left px-4 py-3 text-sm font-semibold" style={{ color: '#121E6C' }}>País</th>
+                  <th className="text-left px-4 py-3 text-sm font-semibold" style={{ color: '#121E6C' }}>Frecuencia</th>
+                  <th className="text-left px-4 py-3 text-sm font-semibold" style={{ color: '#121E6C' }}>Estado</th>
+                  <th className="text-left px-4 py-3 text-sm font-semibold" style={{ color: '#121E6C' }}>Configs</th>
+                  <th className="text-left px-4 py-3 text-sm font-semibold" style={{ color: '#121E6C' }}>Modificación</th>
+                  <th className="text-left px-4 py-3 text-sm font-semibold" style={{ color: '#121E6C' }}>Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map(ledger => (
                   <tr
                     key={ledger.id}
-                    className="border-b border-[#d2d4e1] hover:bg-[#fdeaeb] transition-colors cursor-pointer"
+                    className="border-b border-[#F1F2F6] hover:bg-[#F1F9FF] transition-colors cursor-pointer"
                     onClick={() => navigate(`/ledgers/${ledger.id}`)}
                   >
                     <td className="px-4 py-4">
