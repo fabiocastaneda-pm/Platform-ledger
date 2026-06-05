@@ -9,8 +9,8 @@ import { Badge } from '../../components/ui/Badge'
 import { Card } from '../../components/ui/Card'
 import { EmptyState } from '../../components/ui/EmptyState'
 import { CreateLedgerModal } from './CreateLedgerModal'
-import type { LedgerStatus, LedgerCountry } from '../../types'
-import { PRODUCTS, COUNTRIES } from '../../services/mock/ledgers'
+import type { LedgerStatus } from '../../types'
+import { PRODUCTS } from '../../services/mock/ledgers'
 
 const STATUS_OPTIONS = [
   { value: '', label: 'Todos los estados' },
@@ -24,36 +24,28 @@ const PRODUCT_OPTIONS = [
   ...PRODUCTS.map(p => ({ value: p, label: p })),
 ]
 
-const COUNTRY_OPTIONS = [
-  { value: '', label: 'Todos los países' },
-  ...COUNTRIES,
-]
-
 const FREQUENCY_LABELS: Record<string, string> = {
   diario: 'Diario', semanal: 'Semanal', quincenal: 'Quincenal', mensual: 'Mensual',
 }
 
 export function LedgerList() {
-  const { ledgers } = useAppStore()
+  const { ledgers, selectedCountry } = useAppStore()
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<LedgerStatus | ''>('')
   const [productFilter, setProductFilter] = useState('')
-  const [countryFilter, setCountryFilter] = useState<LedgerCountry | ''>('')
   const [showCreate, setShowCreate] = useState(false)
 
   const filtered = ledgers.filter(l => {
-    const matchSearch = l.name.toLowerCase().includes(search.toLowerCase())
-    const matchStatus = !statusFilter || l.status === statusFilter
+    const matchSearch  = l.name.toLowerCase().includes(search.toLowerCase())
+    const matchStatus  = !statusFilter  || l.status  === statusFilter
     const matchProduct = !productFilter || l.product === productFilter
-    const matchCountry = !countryFilter || l.country === countryFilter
+    const matchCountry = l.country === selectedCountry   // siempre filtrar por país global
     return matchSearch && matchStatus && matchProduct && matchCountry
   })
 
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' })
-
-  const countryLabel = (c: string) => COUNTRIES.find(x => x.value === c)?.label ?? c
 
   return (
     <div className="fade-in">
@@ -90,13 +82,6 @@ export function LedgerList() {
               onChange={e => setStatusFilter(e.target.value as LedgerStatus | '')}
             />
           </div>
-          <div className="w-44">
-            <Select
-              options={COUNTRY_OPTIONS}
-              value={countryFilter}
-              onChange={e => setCountryFilter(e.target.value as LedgerCountry | '')}
-            />
-          </div>
           <div className="w-52">
             <Select
               options={PRODUCT_OPTIONS}
@@ -125,9 +110,8 @@ export function LedgerList() {
               <thead>
                 <tr style={{ background: '#F1F2F6', borderBottom: '2px solid #F1F2F6' }}>
                   <th className="text-left px-4 py-3 text-sm font-semibold" style={{ color: '#121E6C' }}>Nombre</th>
-                  <th className="text-left px-4 py-3 text-sm font-semibold" style={{ color: '#121E6C' }}>ID Interno</th>
+                  <th className="text-left px-4 py-3 text-sm font-semibold whitespace-nowrap" style={{ color: '#121E6C' }}>ID Interno</th>
                   <th className="text-left px-4 py-3 text-sm font-semibold" style={{ color: '#121E6C' }}>Producto</th>
-                  <th className="text-left px-4 py-3 text-sm font-semibold" style={{ color: '#121E6C' }}>País</th>
                   <th className="text-left px-4 py-3 text-sm font-semibold" style={{ color: '#121E6C' }}>Frecuencia</th>
                   <th className="text-left px-4 py-3 text-sm font-semibold" style={{ color: '#121E6C' }}>Estado</th>
                   <th className="text-left px-4 py-3 text-sm font-semibold" style={{ color: '#121E6C' }}>Configs</th>
@@ -143,40 +127,54 @@ export function LedgerList() {
                     onClick={() => navigate(`/ledgers/${ledger.id}`)}
                   >
                     <td className="px-4 py-4">
-                      <p className="text-sm font-semibold text-[#121e6c]">{ledger.name}</p>
+                      <p className="text-sm font-semibold" style={{ color: '#121E6C' }}>{ledger.name}</p>
                       {ledger.description && (
-                        <p className="text-xs text-[#6c759f] truncate max-w-[200px]">{ledger.description}</p>
+                        <p className="text-xs truncate max-w-[200px]" style={{ color: '#606060' }}>{ledger.description}</p>
                       )}
                     </td>
-                    <td className="px-4 py-4">
-                      <span className="text-xs font-mono font-semibold px-2 py-1 rounded bg-[#f1f2f6] text-[#3e4983]">
+                    {/* ID Interno — nowrap para que no se corte */}
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <span
+                        className="text-xs font-mono font-semibold px-2 py-1 rounded-md"
+                        style={{ background: '#F3F3F3', color: '#3E4983', whiteSpace: 'nowrap' }}
+                      >
                         {ledger.internalId}
                       </span>
                     </td>
-                    <td className="px-4 py-4 text-sm text-[#121e6c]">
+                    <td className="px-4 py-4 text-sm" style={{ color: '#121E6C' }}>
                       <p>{ledger.product}</p>
-                      <p className="text-xs text-[#6c759f]">{ledger.company}</p>
+                      <p className="text-xs" style={{ color: '#606060' }}>{ledger.company}</p>
                     </td>
-                    <td className="px-4 py-4 text-sm text-[#121e6c]">{countryLabel(ledger.country)}</td>
                     <td className="px-4 py-4">
-                      <span className="text-xs font-semibold px-2 py-1 rounded-full bg-[#f1f2f6] text-[#3e4983]">
+                      <span
+                        className="text-xs font-semibold px-2 py-1 rounded-full"
+                        style={{ background: '#F3F3F3', color: '#3E4983' }}
+                      >
                         {FREQUENCY_LABELS[ledger.frequency]}
                       </span>
                     </td>
                     <td className="px-4 py-4"><Badge status={ledger.status} /></td>
-                    <td className="px-4 py-4 text-sm text-[#6c759f]">{ledger.configs.length} tipo{ledger.configs.length !== 1 ? 's' : ''}</td>
-                    <td className="px-4 py-4 text-sm text-[#6c759f]">{formatDate(ledger.updatedAt)}</td>
+                    <td className="px-4 py-4 text-sm" style={{ color: '#606060' }}>
+                      {ledger.configs.length} tipo{ledger.configs.length !== 1 ? 's' : ''}
+                    </td>
+                    <td className="px-4 py-4 text-sm" style={{ color: '#606060' }}>{formatDate(ledger.updatedAt)}</td>
                     <td className="px-4 py-4">
                       <div className="flex gap-2" onClick={e => e.stopPropagation()}>
                         <button
-                          className="p-2 rounded-lg hover:bg-[#f1f2f6] text-[#6c759f] hover:text-[#121e6c] transition-colors"
+                          className="p-2 rounded-lg transition-colors"
+                          style={{ color: '#606060' }}
+                          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#F1F2F6'; (e.currentTarget as HTMLElement).style.color = '#121E6C' }}
+                          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = '#606060' }}
                           onClick={() => navigate(`/ledgers/${ledger.id}`)}
                           title="Ver detalle"
                         >
                           <Eye size={16} />
                         </button>
                         <button
-                          className="p-2 rounded-lg hover:bg-[#f1f2f6] text-[#6c759f] hover:text-[#121e6c] transition-colors"
+                          className="p-2 rounded-lg transition-colors"
+                          style={{ color: '#606060' }}
+                          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#F1F2F6'; (e.currentTarget as HTMLElement).style.color = '#121E6C' }}
+                          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = '#606060' }}
                           onClick={() => navigate(`/ledgers/${ledger.id}`)}
                           title="Editar"
                         >
