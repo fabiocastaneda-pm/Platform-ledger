@@ -142,7 +142,7 @@ export function LedgerList() {
                       </span>
                     </td>
                     <td className="px-4 py-4 text-sm" style={{ color: '#121E6C' }}>
-                      <p>{ledger.product}</p>
+                      <p>{ledger.product || <span style={{ color: '#969696' }}>—</span>}</p>
                       <p className="text-xs" style={{ color: '#606060' }}>{ledger.company}</p>
                     </td>
                     <td className="px-4 py-4">
