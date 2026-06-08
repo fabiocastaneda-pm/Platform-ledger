@@ -9,27 +9,41 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --blue:    #121e6c;
-      --coral:   #ee424e;
-      --clematis:#3e4983;
-      --velvet:  #6c759f;
-      --serenity:#969bbd;
-      --zen:     #d2d4e1;
-      --light:   #f1f2f6;
-      --success: #4caf50;
-      --warning: #ff9800;
+      /* Merlin Design System — tokens canónicos */
+      --blue-100:  #121E6C;
+      --blue-60:   #3E4983;
+      --blue-10:   #F1F2F6;
+      --coral-100: #FF2947;
+      --coral-hover:#E4102E;
+      --coral-10:  #FEF1F3;
+      --black-100: #1E1E1E;
+      --black-60:  #606060;
+      --black-40:  #969696;
+      --black-10:  #F3F3F3;
+      --bg-page:   #F7F8FB;
+      --white:     #FFFFFF;
+      /* Feedback */
+      --success-bg:   #F4FDF9;
+      --success-text: #1B8959;
+      --warning-bg:   #FFF3D1;
+      --warning-text: #5B3100;
+      --info-bg:      #F1F9FF;
+      --info-text:    #0A53A5;
+      /* Sombras */
+      --shadow-card:  0px 4px 12px 0px rgba(18,30,108,0.08);
+      --shadow-modal: 0px 12px 28px 0px rgba(18,30,108,0.08);
     }
 
     body {
       font-family: 'Montserrat', system-ui, sans-serif;
-      background: var(--light);
-      color: var(--blue);
+      background: var(--bg-page);
+      color: var(--blue-100);
       -webkit-font-smoothing: antialiased;
     }
 
     /* ── HERO ── */
     .hero {
-      background: linear-gradient(135deg, var(--blue) 0%, #1e2f8a 50%, var(--coral) 100%);
+      background: linear-gradient(135deg, var(--blue-100) 0%, #1e2f8a 50%, var(--coral-100) 100%);
       padding: 72px 32px 80px;
       text-align: center;
       position: relative;
@@ -39,7 +53,7 @@
       content: '';
       position: absolute;
       inset: 0;
-      background: radial-gradient(ellipse at 70% 50%, rgba(238,66,78,.25) 0%, transparent 65%);
+      background: radial-gradient(ellipse at 70% 50%, rgba(255,41,71,.25) 0%, transparent 65%);
     }
     .hero-logo {
       display: inline-flex;
@@ -67,7 +81,7 @@
       margin-bottom: 16px;
       position: relative;
     }
-    .hero h1 em { color: var(--coral); font-style: normal; }
+    .hero h1 em { color: var(--coral-100); font-style: normal; }
     .hero p {
       color: rgba(255,255,255,.8);
       font-size: 18px;
@@ -77,16 +91,17 @@
       line-height: 1.6;
       position: relative;
     }
+    /* Botón Merlin: pill 32px, Coral/100 */
     .hero-cta {
       display: inline-flex;
       align-items: center;
       gap: 10px;
       background: #fff;
-      color: var(--blue);
-      font-weight: 800;
+      color: var(--blue-100);
+      font-weight: 700;
       font-size: 16px;
-      padding: 16px 40px;
-      border-radius: 50px;
+      padding: 14px 36px;
+      border-radius: 32px;
       text-decoration: none;
       transition: transform .15s, box-shadow .15s;
       position: relative;
@@ -97,8 +112,8 @@
 
     /* ── STATS BAR ── */
     .stats {
-      background: #fff;
-      border-bottom: 1px solid var(--zen);
+      background: var(--white);
+      border-bottom: 1px solid var(--blue-10);
       display: flex;
       justify-content: center;
       flex-wrap: wrap;
@@ -107,12 +122,12 @@
     .stat {
       padding: 20px 40px;
       text-align: center;
-      border-right: 1px solid var(--zen);
+      border-right: 1px solid var(--blue-10);
     }
     .stat:last-child { border-right: none; }
-    .stat-value { font-size: 28px; font-weight: 900; color: var(--blue); }
-    .stat-value span { color: var(--coral); }
-    .stat-label { font-size: 12px; font-weight: 600; color: var(--velvet); margin-top: 2px; }
+    .stat-value { font-size: 28px; font-weight: 900; color: var(--blue-100); }
+    .stat-value span { color: var(--coral-100); }
+    .stat-label { font-size: 12px; font-weight: 600; color: var(--black-60); margin-top: 2px; }
 
     /* ── SECTIONS ── */
     .container { max-width: 1100px; margin: 0 auto; padding: 0 32px; }
@@ -123,13 +138,13 @@
       font-weight: 700;
       letter-spacing: .12em;
       text-transform: uppercase;
-      color: var(--coral);
+      color: var(--coral-100);
       margin-bottom: 12px;
     }
     .section-h2 {
       font-size: clamp(22px, 3vw, 34px);
       font-weight: 900;
-      color: var(--blue);
+      color: var(--blue-100);
       margin-bottom: 40px;
       line-height: 1.2;
     }
@@ -137,14 +152,13 @@
     /* ── MODULES GRID ── */
     .modules { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
     .module-card {
-      background: #fff;
-      border: 1px solid var(--zen);
+      background: var(--white);
       border-radius: 16px;
       padding: 28px;
-      box-shadow: 0 2px 8px rgba(18,30,108,.06);
+      box-shadow: var(--shadow-card);
       transition: transform .15s, box-shadow .15s;
     }
-    .module-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(18,30,108,.12); }
+    .module-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(18,30,108,.14); }
     .module-icon {
       width: 48px; height: 48px;
       border-radius: 12px;
@@ -152,94 +166,93 @@
       font-size: 22px;
       margin-bottom: 16px;
     }
-    .module-card h3 { font-size: 16px; font-weight: 800; color: var(--blue); margin-bottom: 8px; }
-    .module-card p  { font-size: 13px; font-weight: 400; color: var(--velvet); line-height: 1.6; margin-bottom: 16px; }
+    .module-card h3 { font-size: 16px; font-weight: 800; color: var(--blue-100); margin-bottom: 8px; }
+    .module-card p  { font-size: 13px; font-weight: 400; color: var(--black-60); line-height: 1.6; margin-bottom: 16px; }
     .feature-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
     .feature-list li {
-      font-size: 12px; font-weight: 600; color: var(--clematis);
+      font-size: 12px; font-weight: 600; color: var(--blue-60);
       display: flex; align-items: center; gap: 6px;
     }
-    .feature-list li::before { content: '✓'; color: var(--success); font-weight: 900; }
+    .feature-list li::before { content: '✓'; color: var(--success-text); font-weight: 900; }
 
     /* ── TECH STACK ── */
     .stack { display: flex; flex-wrap: wrap; gap: 12px; }
     .tag {
       display: inline-flex; align-items: center; gap: 6px;
-      background: var(--light);
-      border: 1px solid var(--zen);
-      border-radius: 50px;
+      background: var(--white);
+      border-radius: 32px;
       padding: 8px 16px;
       font-size: 13px;
       font-weight: 700;
-      color: var(--blue);
+      color: var(--blue-100);
+      box-shadow: var(--shadow-card);
     }
     .tag-dot { width: 8px; height: 8px; border-radius: 50%; }
 
     /* ── KPIs ── */
     .kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
     .kpi-card {
-      background: linear-gradient(135deg, var(--blue) 0%, var(--coral) 100%);
+      background: linear-gradient(135deg, var(--blue-100) 0%, var(--coral-100) 100%);
       border-radius: 16px;
       padding: 24px;
       color: #fff;
     }
     .kpi-card.light {
-      background: #fff;
-      border: 1px solid var(--zen);
-      color: var(--blue);
-      box-shadow: 0 2px 8px rgba(18,30,108,.06);
+      background: var(--white);
+      color: var(--blue-100);
+      box-shadow: var(--shadow-card);
     }
     .kpi-value { font-size: 32px; font-weight: 900; margin-bottom: 4px; }
-    .kpi-card.light .kpi-value { color: var(--blue); }
+    .kpi-card.light .kpi-value { color: var(--blue-100); }
     .kpi-label { font-size: 13px; font-weight: 600; opacity: .8; }
-    .kpi-card.light .kpi-label { color: var(--velvet); opacity: 1; }
+    .kpi-card.light .kpi-label { color: var(--black-60); opacity: 1; }
 
     /* ── FLOWS ── */
     .flows { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
     @media (max-width: 700px) { .flows { grid-template-columns: 1fr; } }
     .flow-card {
-      background: #fff;
-      border: 1px solid var(--zen);
+      background: var(--white);
       border-radius: 16px;
       padding: 28px;
-      box-shadow: 0 2px 8px rgba(18,30,108,.06);
+      box-shadow: var(--shadow-card);
     }
-    .flow-card h4 { font-size: 15px; font-weight: 800; color: var(--blue); margin-bottom: 16px; }
+    .flow-card h4 { font-size: 15px; font-weight: 800; color: var(--blue-100); margin-bottom: 16px; }
     .flow-step {
       display: flex; align-items: flex-start; gap: 12px;
       margin-bottom: 12px;
     }
     .step-num {
       width: 24px; height: 24px; border-radius: 50%;
-      background: var(--blue);
+      background: var(--blue-100);
       color: #fff;
       font-size: 11px; font-weight: 900;
       display: flex; align-items: center; justify-content: center;
       flex-shrink: 0; margin-top: 1px;
     }
-    .flow-card.coral .step-num { background: var(--coral); }
-    .step-text { font-size: 13px; color: var(--velvet); line-height: 1.5; font-weight: 500; }
+    .flow-card.coral .step-num { background: var(--coral-100); }
+    .step-text { font-size: 13px; color: var(--black-60); line-height: 1.5; font-weight: 500; }
 
     /* ── CTA BOTTOM ── */
     .cta-section {
-      background: var(--blue);
+      background: var(--blue-100);
       padding: 72px 32px;
       text-align: center;
     }
     .cta-section h2 { color: #fff; font-size: clamp(22px, 3vw, 36px); font-weight: 900; margin-bottom: 16px; }
     .cta-section p  { color: rgba(255,255,255,.7); font-size: 16px; margin-bottom: 36px; }
+    /* Botón Merlin Primary: Coral/100, pill */
     .cta-btn {
       display: inline-flex; align-items: center; gap: 10px;
-      background: var(--coral);
+      background: var(--coral-100);
       color: #fff;
-      font-weight: 800; font-size: 16px;
-      padding: 16px 44px;
-      border-radius: 50px;
+      font-weight: 700; font-size: 16px;
+      padding: 14px 40px;
+      border-radius: 32px;
       text-decoration: none;
       transition: background .15s, transform .15s;
-      box-shadow: 0 4px 20px rgba(238,66,78,.4);
+      box-shadow: 0 4px 20px rgba(255,41,71,.4);
     }
-    .cta-btn:hover { background: #c73c53; transform: translateY(-2px); }
+    .cta-btn:hover { background: var(--coral-hover); transform: translateY(-2px); }
 
     /* ── FOOTER ── */
     footer {
@@ -248,20 +261,20 @@
       text-align: center;
     }
     footer p { color: rgba(255,255,255,.4); font-size: 12px; font-weight: 600; }
-    footer a { color: var(--coral); text-decoration: none; }
+    footer a { color: var(--coral-100); text-decoration: none; }
 
-    /* ── BADGE ── */
+    /* ── BADGE — Merlin feedback tokens ── */
     .badge {
       display: inline-flex; align-items: center; gap: 6px;
-      padding: 4px 12px; border-radius: 50px;
+      padding: 4px 12px; border-radius: 100px;
       font-size: 11px; font-weight: 700;
     }
-    .badge-green { background: #e8f5e9; color: #2e7d32; }
-    .badge-blue  { background: #e8eaf6; color: var(--clematis); }
+    .badge-green { background: var(--success-bg); color: var(--success-text); }
+    .badge-blue  { background: var(--info-bg);    color: var(--info-text); }
 
     @media (max-width: 600px) {
       .stats { flex-direction: column; }
-      .stat  { border-right: none; border-bottom: 1px solid var(--zen); }
+      .stat  { border-right: none; border-bottom: 1px solid var(--blue-10); }
     }
   </style>
 </head>
@@ -303,23 +316,23 @@
     <div class="modules">
 
       <div class="module-card">
-        <div class="module-icon" style="background:#e8eaf6">📒</div>
+        <div class="module-icon" style="background:#F1F9FF">📒</div>
         <h3>Gestión de Ledgers</h3>
-        <p>CRUD completo con ciclo de vida de estados y registro de auditoría automático.</p>
+        <p>CRUD completo con ciclo de vida de estados, selector de país global y registro de auditoría automático.</p>
         <ul class="feature-list">
           <li>Crear / editar / activar / desactivar</li>
           <li>Estados: Borrador → Activo → Inactivo</li>
-          <li>Validación de nombre único y caracteres</li>
+          <li>Selector de país 🇨🇴 🇵🇪 en header global</li>
           <li>Versioning de configuraciones</li>
         </ul>
       </div>
 
       <div class="module-card">
-        <div class="module-icon" style="background:#e8f5e9">⚖️</div>
+        <div class="module-icon" style="background:#F4FDF9">⚖️</div>
         <h3>Configuración Contable</h3>
-        <p>AccountingEntryConfig con validación de partida doble y preview de asiento en tiempo real.</p>
+        <p>AccountingEntryConfig con autocompletado de cuentas PUC, validación de partida doble y preview de asiento.</p>
         <ul class="feature-list">
-          <li>Mapeo campo monetario → cuenta PUC</li>
+          <li>Autocompletado de cuenta auxiliar (código o nombre)</li>
           <li>Naturaleza Débito / Crédito</li>
           <li>Validación ∑Débitos = ∑Créditos</li>
           <li>Preview asiento con datos ejemplo</li>
@@ -327,7 +340,7 @@
       </div>
 
       <div class="module-card">
-        <div class="module-icon" style="background:#fff3e0">📊</div>
+        <div class="module-icon" style="background:#FFF3D1">📊</div>
         <h3>Dashboard de Monitoreo</h3>
         <p>Métricas en tiempo real con auto-refresh configurable y alertas activas.</p>
         <ul class="feature-list">
@@ -339,7 +352,7 @@
       </div>
 
       <div class="module-card">
-        <div class="module-icon" style="background:#fce4ec">🧾</div>
+        <div class="module-icon" style="background:#FBF3F5">🧾</div>
         <h3>Log de Transacciones</h3>
         <p>Búsqueda multi-criterio con detalle completo de payload y asientos generados.</p>
         <ul class="feature-list">
@@ -351,23 +364,23 @@
       </div>
 
       <div class="module-card">
-        <div class="module-icon" style="background:#e8eaf6">🛡️</div>
+        <div class="module-icon" style="background:#F1F9FF">🛡️</div>
         <h3>Auditoría de Cambios</h3>
         <p>Log inmutable append-only con diff visual antes/después para compliance SFC.</p>
         <ul class="feature-list">
           <li>Registro automático de todos los cambios</li>
-          <li>Diff visual antes / después (rojo / verde)</li>
+          <li>Diff visual antes / después</li>
           <li>Filtros por usuario, acción, fecha, ledger</li>
-          <li>Exportar a PDF para auditorías externas</li>
+          <li>Exportar para auditorías externas</li>
         </ul>
       </div>
 
       <div class="module-card">
-        <div class="module-icon" style="background:#e8f5e9">🗂️</div>
+        <div class="module-icon" style="background:#F4FDF9">🗂️</div>
         <h3>Plan de Cuentas (PUC)</h3>
-        <p>Catálogo de cuentas contables colombiano con CRUD y autocomplete integrado.</p>
+        <p>Catálogo de cuentas contables colombiano con CRUD y autocomplete integrado en la configuración contable.</p>
         <ul class="feature-list">
-          <li>20 cuentas PUC Colombia precargadas</li>
+          <li>25 cuentas PUC Colombia precargadas</li>
           <li>Tipos: Activo / Pasivo / Ingreso / Egreso</li>
           <li>Búsqueda por código o nombre</li>
           <li>Exportar / Importar CSV</li>
@@ -375,9 +388,9 @@
       </div>
 
       <div class="module-card">
-        <div class="module-icon" style="background:#fff8e1">🔌</div>
+        <div class="module-icon" style="background:#FFF3D1">🔌</div>
         <h3>Configuración ERP</h3>
-        <p>Preparación para integración futura con ERP externo (Fase 2).</p>
+        <p>Preparación para integración futura con ERP externo (Fase 2). Filtrado por país activo.</p>
         <ul class="feature-list">
           <li>Formatos: CSV / JSON / XML</li>
           <li>Frecuencia: Diaria / Semanal / Mensual</li>
@@ -432,11 +445,11 @@
     <div class="flows">
       <div class="flow-card">
         <h4>⚡ Crear y activar ledger (Happy Path)</h4>
-        <div class="flow-step"><div class="step-num">1</div><div class="step-text">Dashboard → "Crear Ledger" → completar formulario</div></div>
-        <div class="flow-step"><div class="step-num">2</div><div class="step-text">Guardar como Borrador → redirige a detalle del ledger</div></div>
-        <div class="flow-step"><div class="step-num">3</div><div class="step-text">Tab "Configuración Contable" → agregar transaction_type</div></div>
-        <div class="flow-step"><div class="step-num">4</div><div class="step-text">Mapear campos → validar partida doble → preview asiento</div></div>
-        <div class="flow-step"><div class="step-num">5</div><div class="step-text">Toggle "Activar Ledger" → confirmar → badge 🟢 Activo</div></div>
+        <div class="flow-step"><div class="step-num">1</div><div class="step-text">Seleccionar país en header (🇨🇴 Colombia o 🇵🇪 Perú)</div></div>
+        <div class="flow-step"><div class="step-num">2</div><div class="step-text">"Crear Ledger" → Nombre, Compañía, Moneda, Frecuencia</div></div>
+        <div class="flow-step"><div class="step-num">3</div><div class="step-text">Guardar como Borrador → redirige a detalle del ledger</div></div>
+        <div class="flow-step"><div class="step-num">4</div><div class="step-text">Tab "Configuración Contable" → agregar transaction_type</div></div>
+        <div class="flow-step"><div class="step-num">5</div><div class="step-text">Buscar cuenta auxiliar → mapear campos → validar partida doble</div></div>
       </div>
       <div class="flow-card coral">
         <h4>🔍 Investigar transacción con error</h4>
@@ -456,14 +469,14 @@
     <p class="section-title">Stack técnico</p>
     <h2 class="section-h2">Tecnologías utilizadas</h2>
     <div class="stack">
-      <span class="tag"><span class="tag-dot" style="background:#61dafb"></span>React 18 + TypeScript</span>
+      <span class="tag"><span class="tag-dot" style="background:#61dafb"></span>React 19 + TypeScript</span>
       <span class="tag"><span class="tag-dot" style="background:#f59e0b"></span>Vite</span>
-      <span class="tag"><span class="tag-dot" style="background:#06b6d4"></span>TailwindCSS</span>
+      <span class="tag"><span class="tag-dot" style="background:#06b6d4"></span>Tailwind CSS v4</span>
       <span class="tag"><span class="tag-dot" style="background:#ff4154"></span>React Query</span>
       <span class="tag"><span class="tag-dot" style="background:#764abc"></span>Zustand</span>
-      <span class="tag"><span class="tag-dot" style="background:#22c55e"></span>React Router v6</span>
-      <span class="tag"><span class="tag-dot" style="background:#ee424e"></span>Recharts</span>
-      <span class="tag"><span class="tag-dot" style="background:#121e6c"></span>Bold Design System</span>
+      <span class="tag"><span class="tag-dot" style="background:#22c55e"></span>React Router v7</span>
+      <span class="tag"><span class="tag-dot" style="background:#FF2947"></span>Recharts</span>
+      <span class="tag"><span class="tag-dot" style="background:#121E6C"></span>Merlin Design System</span>
       <span class="tag"><span class="tag-dot" style="background:#333"></span>Lucide Icons</span>
       <span class="tag"><span class="tag-dot" style="background:#2088ff"></span>GitHub Actions CI/CD</span>
       <span class="tag"><span class="tag-dot" style="background:#6e5494"></span>OpenSpec</span>
@@ -472,7 +485,7 @@
     <div style="margin-top:32px; display:flex; gap:12px; flex-wrap:wrap">
       <span class="badge badge-green">✓ Build sin errores TypeScript</span>
       <span class="badge badge-green">✓ Deploy automático en GitHub Pages</span>
-      <span class="badge badge-blue">📋 OpenSpec: proposal + design + 6 specs</span>
+      <span class="badge badge-blue">🎨 Merlin Design System alineado</span>
       <span class="badge badge-blue">🏗️ Fase 1 — Datos mock, API-ready</span>
     </div>
   </div>
@@ -498,7 +511,7 @@
 </section>
 
 <footer>
-  <p>Bold · Finance Core · Plataforma Ledger · Fase 1 · Mayo 2026 &nbsp;·&nbsp;
+  <p>Bold · Finance Core · Plataforma Ledger · v1.2.0 · Junio 2026 &nbsp;·&nbsp;
     <a href="https://github.com/dev-facastaa/Ledger-platform" target="_blank">GitHub</a>
   </p>
 </footer>
