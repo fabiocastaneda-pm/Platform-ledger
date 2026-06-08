@@ -111,7 +111,6 @@ export function LedgerList() {
                 <tr style={{ background: '#F1F2F6', borderBottom: '2px solid #F1F2F6' }}>
                   <th className="text-left px-4 py-3 text-sm font-semibold" style={{ color: '#121E6C' }}>Nombre</th>
                   <th className="text-left px-4 py-3 text-sm font-semibold whitespace-nowrap" style={{ color: '#121E6C' }}>ID Interno</th>
-                  <th className="text-left px-4 py-3 text-sm font-semibold" style={{ color: '#121E6C' }}>Producto</th>
                   <th className="text-left px-4 py-3 text-sm font-semibold" style={{ color: '#121E6C' }}>Frecuencia</th>
                   <th className="text-left px-4 py-3 text-sm font-semibold" style={{ color: '#121E6C' }}>Estado</th>
                   <th className="text-left px-4 py-3 text-sm font-semibold" style={{ color: '#121E6C' }}>Configs</th>
@@ -140,10 +139,6 @@ export function LedgerList() {
                       >
                         {ledger.internalId}
                       </span>
-                    </td>
-                    <td className="px-4 py-4 text-sm" style={{ color: '#121E6C' }}>
-                      <p>{ledger.product || <span style={{ color: '#969696' }}>—</span>}</p>
-                      <p className="text-xs" style={{ color: '#606060' }}>{ledger.company}</p>
                     </td>
                     <td className="px-4 py-4">
                       <span

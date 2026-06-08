@@ -157,10 +157,6 @@ export function LedgerDetail() {
                 <dd className="text-sm text-[#121e6c] mt-0.5">{ledger.name}</dd>
               </div>
               <div>
-                <dt className="text-xs font-semibold text-[#6c759f] uppercase tracking-wide">Producto</dt>
-                <dd className="text-sm text-[#121e6c] mt-0.5">{ledger.product}</dd>
-              </div>
-              <div>
                 <dt className="text-xs font-semibold text-[#6c759f] uppercase tracking-wide">Descripción</dt>
                 <dd className="text-sm text-[#121e6c] mt-0.5">{ledger.description || '—'}</dd>
               </div>
