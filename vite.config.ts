@@ -7,7 +7,7 @@ const pkg = JSON.parse(readFileSync('./package.json', 'utf-8'))
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  base: '/Ledger-platform/',
+  base: '/Platform-ledger/',
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
   },
