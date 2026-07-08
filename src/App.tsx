@@ -8,13 +8,14 @@ import { TransactionLog } from './modules/monitoring/TransactionLog'
 import { AuditLog } from './modules/audit/AuditLog'
 import { ChartOfAccounts } from './modules/accounts/ChartOfAccounts'
 import { ERPModule } from './modules/erp/ERPModule'
+import { ProgramacionesList } from './modules/programaciones/ProgramacionesList'
 
 const queryClient = new QueryClient()
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter basename="/Ledger-platform">
+      <BrowserRouter basename="/Platform-ledger">
         <Routes>
           <Route path="/" element={<AppLayout />}>
             <Route index element={<Navigate to="/ledgers" replace />} />
@@ -25,6 +26,7 @@ function App() {
             <Route path="audit" element={<AuditLog />} />
             <Route path="accounts" element={<ChartOfAccounts />} />
             <Route path="erp" element={<ERPModule />} />
+            <Route path="programaciones" element={<ProgramacionesList />} />
           </Route>
         </Routes>
       </BrowserRouter>

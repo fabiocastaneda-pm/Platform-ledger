@@ -1,15 +1,19 @@
 import { useState } from 'react'
-import { Plus, Search, BookOpen, Edit2, Eye } from 'lucide-react'
+import type { ReactNode } from 'react'
+import { Plus, Search, BookOpen, Edit2, Eye, Play, Pause } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAppStore } from '../../store'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Select } from '../../components/ui/Input'
+import { Textarea } from '../../components/ui/Input'
 import { Badge } from '../../components/ui/Badge'
 import { Card } from '../../components/ui/Card'
 import { EmptyState } from '../../components/ui/EmptyState'
+import { Modal, ConfirmModal } from '../../components/ui/Modal'
 import { CreateLedgerModal } from './CreateLedgerModal'
-import type { LedgerStatus } from '../../types'
+import { EditLedgerModal } from './EditLedgerModal'
+import type { Ledger, LedgerStatus } from '../../types'
 import { PRODUCTS } from '../../services/mock/ledgers'
 
 const STATUS_OPTIONS = [
@@ -29,23 +33,77 @@ const FREQUENCY_LABELS: Record<string, string> = {
 }
 
 export function LedgerList() {
-  const { ledgers, selectedCountry } = useAppStore()
+  const { ledgers, selectedCountry, updateLedger, addToast } = useAppStore()
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<LedgerStatus | ''>('')
   const [productFilter, setProductFilter] = useState('')
   const [showCreate, setShowCreate] = useState(false)
 
+  // Estado para acciones de fila
+  const [editTarget, setEditTarget] = useState<Ledger | null>(null)
+  const [activateTarget, setActivateTarget] = useState<Ledger | null>(null)
+  const [deactivateTarget, setDeactivateTarget] = useState<Ledger | null>(null)
+  const [deactivateReason, setDeactivateReason] = useState('')
+  const [loading, setLoading] = useState(false)
+
   const filtered = ledgers.filter(l => {
     const matchSearch  = l.name.toLowerCase().includes(search.toLowerCase())
     const matchStatus  = !statusFilter  || l.status  === statusFilter
     const matchProduct = !productFilter || l.product === productFilter
-    const matchCountry = l.country === selectedCountry   // siempre filtrar por país global
+    const matchCountry = l.country === selectedCountry
     return matchSearch && matchStatus && matchProduct && matchCountry
   })
 
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' })
+
+  const handleActivate = async () => {
+    if (!activateTarget) return
+    if (activateTarget.configs.length === 0) {
+      addToast('error', 'El ledger debe tener al menos una configuración contable antes de activarse')
+      setActivateTarget(null)
+      return
+    }
+    setLoading(true)
+    await new Promise(r => setTimeout(r, 600))
+    updateLedger(activateTarget.id, { status: 'activo' })
+    addToast('success', 'Ledger activado correctamente')
+    setLoading(false)
+    setActivateTarget(null)
+  }
+
+  const handleDeactivate = async () => {
+    if (!deactivateTarget) return
+    setLoading(true)
+    await new Promise(r => setTimeout(r, 600))
+    updateLedger(deactivateTarget.id, { status: 'inactivo' })
+    addToast('success', 'Ledger desactivado')
+    setLoading(false)
+    setDeactivateTarget(null)
+    setDeactivateReason('')
+  }
+
+  const iconBtn = (onClick: () => void, title: string, children: ReactNode, danger = false) => (
+    <button
+      className="p-2 rounded-lg transition-colors"
+      style={{ color: '#606060' }}
+      onMouseEnter={e => {
+        const el = e.currentTarget as HTMLElement
+        el.style.background = danger ? '#FBF3F5' : '#F1F2F6'
+        el.style.color = danger ? '#910022' : '#121E6C'
+      }}
+      onMouseLeave={e => {
+        const el = e.currentTarget as HTMLElement
+        el.style.background = 'transparent'
+        el.style.color = '#606060'
+      }}
+      onClick={onClick}
+      title={title}
+    >
+      {children}
+    </button>
+  )
 
   return (
     <div className="fade-in">
@@ -131,7 +189,6 @@ export function LedgerList() {
                         <p className="text-xs truncate max-w-[200px]" style={{ color: '#606060' }}>{ledger.description}</p>
                       )}
                     </td>
-                    {/* ID Interno — nowrap para que no se corte */}
                     <td className="px-4 py-4 whitespace-nowrap">
                       <span
                         className="text-xs font-mono font-semibold px-2 py-1 rounded-md"
@@ -154,27 +211,20 @@ export function LedgerList() {
                     </td>
                     <td className="px-4 py-4 text-sm" style={{ color: '#606060' }}>{formatDate(ledger.updatedAt)}</td>
                     <td className="px-4 py-4">
-                      <div className="flex gap-2" onClick={e => e.stopPropagation()}>
-                        <button
-                          className="p-2 rounded-lg transition-colors"
-                          style={{ color: '#606060' }}
-                          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#F1F2F6'; (e.currentTarget as HTMLElement).style.color = '#121E6C' }}
-                          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = '#606060' }}
-                          onClick={() => navigate(`/ledgers/${ledger.id}`)}
-                          title="Ver detalle"
-                        >
-                          <Eye size={16} />
-                        </button>
-                        <button
-                          className="p-2 rounded-lg transition-colors"
-                          style={{ color: '#606060' }}
-                          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#F1F2F6'; (e.currentTarget as HTMLElement).style.color = '#121E6C' }}
-                          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = '#606060' }}
-                          onClick={() => navigate(`/ledgers/${ledger.id}`)}
-                          title="Editar"
-                        >
-                          <Edit2 size={16} />
-                        </button>
+                      <div className="flex gap-1" onClick={e => e.stopPropagation()}>
+                        {iconBtn(() => navigate(`/ledgers/${ledger.id}`), 'Ver detalle', <Eye size={16} />)}
+                        {iconBtn(() => setEditTarget(ledger), 'Editar', <Edit2 size={16} />)}
+                        {ledger.status === 'borrador' && iconBtn(
+                          () => setActivateTarget(ledger),
+                          'Activar',
+                          <Play size={16} />,
+                        )}
+                        {ledger.status === 'activo' && iconBtn(
+                          () => { setDeactivateTarget(ledger); setDeactivateReason('') },
+                          'Desactivar',
+                          <Pause size={16} />,
+                          true,
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -186,6 +236,55 @@ export function LedgerList() {
       </Card>
 
       <CreateLedgerModal open={showCreate} onClose={() => setShowCreate(false)} />
+
+      {editTarget && (
+        <EditLedgerModal
+          ledger={editTarget}
+          open
+          onClose={() => setEditTarget(null)}
+        />
+      )}
+
+      <ConfirmModal
+        open={!!activateTarget}
+        onClose={() => setActivateTarget(null)}
+        onConfirm={handleActivate}
+        title="Activar Ledger"
+        message={`El ledger "${activateTarget?.name}" comenzará a procesar transacciones reales. ¿Continuar?`}
+        confirmLabel="Activar"
+        variant="primary"
+        loading={loading}
+      />
+
+      <Modal
+        open={!!deactivateTarget}
+        onClose={() => { setDeactivateTarget(null); setDeactivateReason('') }}
+        title="Desactivar Ledger"
+        maxWidth="max-w-md"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => { setDeactivateTarget(null); setDeactivateReason('') }} disabled={loading}>
+              Cancelar
+            </Button>
+            <Button variant="danger" onClick={handleDeactivate} loading={loading} disabled={!deactivateReason.trim()}>
+              Desactivar
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <p className="text-sm" style={{ color: '#6c759f' }}>
+            El ledger <strong>{deactivateTarget?.name}</strong> dejará de aceptar nuevas transacciones. El historial se preserva.
+          </p>
+          <Textarea
+            label="Motivo de desactivación *"
+            value={deactivateReason}
+            onChange={e => setDeactivateReason(e.target.value)}
+            placeholder="Ej: Producto descontinuado, revisión de configuración contable..."
+            rows={3}
+          />
+        </div>
+      </Modal>
     </div>
   )
 }

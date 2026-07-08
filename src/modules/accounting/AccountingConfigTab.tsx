@@ -1,19 +1,21 @@
 import { useState, useRef, useEffect } from 'react'
-import { Plus, Edit2, Trash2, CheckCircle, AlertTriangle, Search } from 'lucide-react'
+import { Plus, Edit2, Trash2, CheckCircle, AlertTriangle, Search, Upload } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { EmptyState } from '../../components/ui/EmptyState'
 import { Modal, ConfirmModal } from '../../components/ui/Modal'
 import { Input } from '../../components/ui/Input'
+import { ScheduleDateModal } from '../../components/ui/ScheduleDateModal'
+import { BulkUploadModal } from '../ledgers/BulkUploadModal'
 import { useAppStore } from '../../store'
-import type { Ledger, AccountingEntryConfig, FieldMapping, AccountNature } from '../../types'
+import type { Ledger, AccountingEntryConfig, FieldMapping, AccountNature, ScheduledChange } from '../../types'
 
 interface Props { ledger: Ledger }
 
 // ─── Autocompletado de cuenta auxiliar ───────────────────────────────────────
 interface AccountAutocompleteProps {
-  value: string        // accountCode seleccionado
-  label: string        // accountName seleccionado
+  value: string
+  label: string
   onSelect: (code: string, name: string) => void
   placeholder?: string
 }
@@ -33,7 +35,6 @@ function AccountAutocomplete({ value, label, onSelect, placeholder = 'Buscar cue
       ).slice(0, 8)
     : []
 
-  // Cerrar al hacer click fuera
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
@@ -168,8 +169,9 @@ function AccountingPreview({ mappings }: { mappings: FieldMapping[] }) {
 
 // ─── Tab principal ────────────────────────────────────────────────────────────
 export function AccountingConfigTab({ ledger }: Props) {
-  const { updateLedger, addToast } = useAppStore()
+  const { updateLedger, addToast, addScheduledChange, currentUser } = useAppStore()
   const [showModal, setShowModal]     = useState(false)
+  const [showBulkUpload, setShowBulkUpload] = useState(false)
   const [editingConfig, setEditingConfig] = useState<AccountingEntryConfig | null>(null)
   const [deleteTarget, setDeleteTarget]   = useState<string | null>(null)
   const [txType, setTxType]           = useState('')
@@ -178,6 +180,10 @@ export function AccountingConfigTab({ ledger }: Props) {
   const [mappings, setMappings]       = useState<FieldMapping[]>([])
   const [loading, setLoading]         = useState(false)
   const [errors, setErrors]           = useState<Record<string, string>>({})
+
+  // Para interceptar cambios de cuenta en ledger activo
+  const [pendingAccountChanges, setPendingAccountChanges] = useState<ScheduledChange[]>([])
+  const [showScheduleDate, setShowScheduleDate] = useState(false)
 
   const blankMapping = (): FieldMapping => ({
     id: crypto.randomUUID(), fieldName: '', accountCode: '', accountName: '', nature: 'debito',
@@ -220,9 +226,53 @@ export function AccountingConfigTab({ ledger }: Props) {
     return e
   }
 
+  const detectAccountChanges = (): ScheduledChange[] => {
+    if (!editingConfig) return []
+    const changes: ScheduledChange[] = []
+    for (const newM of mappings) {
+      const oldM = editingConfig.fieldMappings.find(m => m.id === newM.id)
+      if (oldM && oldM.accountCode !== newM.accountCode && newM.accountCode) {
+        changes.push({
+          id: crypto.randomUUID(),
+          ledgerId: ledger.id,
+          ledgerName: ledger.name,
+          configId: editingConfig.id,
+          transactionType: editingConfig.transactionType,
+          fieldMappingId: newM.id,
+          fieldName: newM.fieldName,
+          oldAccountCode: oldM.accountCode,
+          oldAccountName: oldM.accountName,
+          newAccountCode: newM.accountCode,
+          newAccountName: newM.accountName,
+          nature: newM.nature,
+          scheduledDate: '',
+          createdAt: new Date().toISOString(),
+          createdBy: currentUser,
+          status: 'pendiente',
+        })
+      }
+    }
+    return changes
+  }
+
   const handleSave = async () => {
     const e = validate()
     if (Object.keys(e).length) { setErrors(e); return }
+
+    // Si el ledger está activo y es edición, detectar cambios de cuenta
+    if (ledger.status === 'activo' && editingConfig) {
+      const accountChanges = detectAccountChanges()
+      if (accountChanges.length > 0) {
+        setPendingAccountChanges(accountChanges)
+        setShowScheduleDate(true)
+        return
+      }
+    }
+
+    await saveConfig(mappings)
+  }
+
+  const saveConfig = async (mappingsToSave: FieldMapping[], successMsg?: string) => {
     setLoading(true)
     await new Promise(r => setTimeout(r, 600))
     const newConfig: AccountingEntryConfig = {
@@ -231,7 +281,7 @@ export function AccountingConfigTab({ ledger }: Props) {
       transactionType: txType.trim(),
       description: description.trim() || undefined,
       accountingNote: accountingNote.trim() || undefined,
-      fieldMappings: mappings,
+      fieldMappings: mappingsToSave,
       createdAt: editingConfig?.createdAt || new Date().toISOString(),
       version: (editingConfig?.version || 0) + 1,
     }
@@ -239,9 +289,28 @@ export function AccountingConfigTab({ ledger }: Props) {
       ? ledger.configs.map(c => c.id === editingConfig.id ? newConfig : c)
       : [...ledger.configs, newConfig]
     updateLedger(ledger.id, { configs: updatedConfigs })
-    addToast('success', editingConfig ? 'Configuración actualizada' : 'Configuración creada exitosamente')
+    addToast('success', successMsg ?? (editingConfig ? 'Configuración actualizada' : 'Configuración creada exitosamente'))
     setLoading(false)
     setShowModal(false)
+    setPendingAccountChanges([])
+  }
+
+  const handleScheduleConfirm = async (date: string) => {
+    // Capturar antes de cualquier reset de estado
+    const changes = pendingAccountChanges
+    for (const change of changes) {
+      addScheduledChange({ ...change, scheduledDate: date })
+    }
+    // Guardar config con cuentas ORIGINALES (los cambios son programados, no inmediatos)
+    const mappingsWithOriginalAccounts = mappings.map(m => {
+      const pending = changes.find(c => c.fieldMappingId === m.id)
+      if (pending) return { ...m, accountCode: pending.oldAccountCode, accountName: pending.oldAccountName }
+      return m
+    })
+    await saveConfig(
+      mappingsWithOriginalAccounts,
+      `Configuración guardada · ${changes.length} cambio(s) de cuenta programado(s) para el ${date}`,
+    )
   }
 
   const handleDelete = async () => {
@@ -260,9 +329,14 @@ export function AccountingConfigTab({ ledger }: Props) {
         <p className="text-sm" style={{ color: '#606060' }}>
           {ledger.configs.length} tipo(s) de transacción configurados
         </p>
-        <Button onClick={openCreate} size="sm">
-          <Plus size={16} /> Agregar tipo de transacción
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="secondary" size="sm" onClick={() => setShowBulkUpload(true)}>
+            <Upload size={16} /> Carga masiva
+          </Button>
+          <Button onClick={openCreate} size="sm">
+            <Plus size={16} /> Agregar tipo de transacción
+          </Button>
+        </div>
       </div>
 
       {ledger.configs.length === 0 ? (
@@ -332,12 +406,12 @@ export function AccountingConfigTab({ ledger }: Props) {
       {/* Modal crear / editar */}
       <Modal
         open={showModal}
-        onClose={() => setShowModal(false)}
+        onClose={() => { setShowModal(false); setPendingAccountChanges([]) }}
         title={editingConfig ? 'Editar Configuración' : 'Nueva Configuración Contable'}
         maxWidth="max-w-2xl"
         footer={
           <>
-            <Button variant="secondary" onClick={() => setShowModal(false)} disabled={loading}>Cancelar</Button>
+            <Button variant="secondary" onClick={() => { setShowModal(false); setPendingAccountChanges([]) }} disabled={loading}>Cancelar</Button>
             <Button onClick={handleSave} loading={loading}>Guardar Configuración</Button>
           </>
         }
@@ -364,7 +438,6 @@ export function AccountingConfigTab({ ledger }: Props) {
             placeholder="Nota contable para este tipo de transacción"
           />
 
-          {/* Mapeo de campos */}
           <div>
             <div className="flex justify-between items-center mb-3">
               <p className="text-sm font-semibold" style={{ color: '#121E6C' }}>Mapeo de Campos Monetarios</p>
@@ -385,7 +458,6 @@ export function AccountingConfigTab({ ledger }: Props) {
             <div className="space-y-2">
               {mappings.map((m, i) => (
                 <div key={m.id} className="grid gap-2 items-start" style={{ gridTemplateColumns: '1fr 2fr auto auto' }}>
-                  {/* Campo monetario */}
                   <div>
                     {i === 0 && <p className="text-xs font-semibold mb-1" style={{ color: '#606060' }}>Campo</p>}
                     <input
@@ -397,7 +469,6 @@ export function AccountingConfigTab({ ledger }: Props) {
                     />
                   </div>
 
-                  {/* Cuenta auxiliar — autocompletado */}
                   <div>
                     {i === 0 && <p className="text-xs font-semibold mb-1" style={{ color: '#606060' }}>Cuenta Auxiliar</p>}
                     <AccountAutocomplete
@@ -407,7 +478,6 @@ export function AccountingConfigTab({ ledger }: Props) {
                     />
                   </div>
 
-                  {/* Naturaleza */}
                   <div>
                     {i === 0 && <p className="text-xs font-semibold mb-1" style={{ color: '#606060' }}>Naturaleza</p>}
                     <select
@@ -421,7 +491,6 @@ export function AccountingConfigTab({ ledger }: Props) {
                     </select>
                   </div>
 
-                  {/* Eliminar fila */}
                   <div>
                     {i === 0 && <p className="text-xs opacity-0 mb-1">x</p>}
                     <button
@@ -453,6 +522,20 @@ export function AccountingConfigTab({ ledger }: Props) {
         message="¿Estás seguro de que deseas eliminar este tipo de transacción? Esta acción no se puede deshacer."
         confirmLabel="Eliminar"
         loading={loading}
+      />
+
+      <ScheduleDateModal
+        open={showScheduleDate}
+        onClose={() => { setShowScheduleDate(false); setPendingAccountChanges([]) }}
+        onConfirm={handleScheduleConfirm}
+        title="Programar cambio de cuenta"
+        description={`Este ledger está activo. Detectamos ${pendingAccountChanges.length} cambio(s) de cuenta. No es posible aplicarlos hoy — selecciona la fecha de vigencia.`}
+      />
+
+      <BulkUploadModal
+        open={showBulkUpload}
+        onClose={() => setShowBulkUpload(false)}
+        ledger={ledger}
       />
     </div>
   )
