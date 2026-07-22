@@ -46,6 +46,9 @@ export interface FieldMapping {
   accountCode: string
   accountName: string
   nature: AccountNature
+  description?: string
+  ceco?: string
+  accountingNote?: string
 }
 
 export interface Account {
@@ -128,4 +131,25 @@ export interface PaginatedResponse<T> {
   total: number
   page: number
   limit: number
+}
+
+export type ScheduledChangeStatus = 'pendiente' | 'aplicado' | 'cancelado'
+
+export interface ScheduledChange {
+  id: string
+  ledgerId: string
+  ledgerName: string
+  configId: string
+  transactionType: string
+  fieldMappingId: string
+  fieldName: string
+  oldAccountCode: string
+  oldAccountName: string
+  newAccountCode: string
+  newAccountName: string
+  nature: AccountNature
+  scheduledDate: string
+  createdAt: string
+  createdBy: string
+  status: ScheduledChangeStatus
 }
