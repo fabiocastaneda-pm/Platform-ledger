@@ -46,6 +46,9 @@ export interface FieldMapping {
   accountCode: string
   accountName: string
   nature: AccountNature
+  description?: string
+  ceco?: string
+  accountingNote?: string
 }
 
 export interface Account {

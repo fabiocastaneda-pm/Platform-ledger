@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { ArrowLeft, ExternalLink, Upload } from 'lucide-react'
 import { useAppStore } from '../../store'
 import { PageHeader } from '../../components/ui/PageHeader'
@@ -15,9 +15,10 @@ const TABS = ['Información General', 'Configuración Contable', 'Configuracione
 export function LedgerDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const location = useLocation()
   const { ledgers } = useAppStore()
   const ledger = ledgers.find(l => l.id === id)
-  const [activeTab, setActiveTab] = useState(0)
+  const [activeTab, setActiveTab] = useState<number>((location.state as { tab?: number } | null)?.tab ?? 0)
 
   if (!ledger) {
     return (
