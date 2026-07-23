@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
-  ArrowLeft, Plus, Trash2, Search, X, ArrowDown,
+  ArrowLeft, Plus, Trash2, Search, ArrowDown,
   CalendarClock, CheckCircle, AlertTriangle,
 } from 'lucide-react'
 import { useAppStore } from '../../store'
@@ -9,6 +9,7 @@ import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
+import { Modal } from '../../components/ui/Modal'
 import type { FieldMapping, AccountNature, ScheduledChange, AccountingEntryConfig } from '../../types'
 
 // ─── Date helpers ──────────────────────────────────────────────────────────────
@@ -161,21 +162,21 @@ export function ConfigEditor() {
   const isNew  = configId === 'new'
   const config = isNew ? null : ledger?.configs.find(c => c.id === configId)
 
-  const [txType, setTxType]             = useState(config?.transactionType || '')
-  const [configDesc, setConfigDesc]     = useState(config?.description || '')
-  const [errors, setErrors]             = useState<Record<string, string>>({})
-  const [loading, setLoading]           = useState(false)
+  const [txType, setTxType]         = useState(config?.transactionType || '')
+  const [configDesc, setConfigDesc] = useState(config?.description || '')
+  const [errors, setErrors]         = useState<Record<string, string>>({})
+  const [loading, setLoading]       = useState(false)
 
-  const [mappings, setMappings]         = useState<FieldMapping[]>(
+  const [mappings, setMappings]           = useState<FieldMapping[]>(
     config ? config.fieldMappings.map(m => ({ ...m })) : [blankMapping()]
   )
-  const [originalMappings]              = useState<FieldMapping[]>(
+  const [originalMappings]                = useState<FieldMapping[]>(
     config ? config.fieldMappings.map(m => ({ ...m })) : []
   )
 
-  // Drawer state
-  const [drawerChange, setDrawerChange] = useState<DrawerChange | null>(null)
-  const [drawerDate, setDrawerDate]     = useState('')
+  // Scheduling modal state
+  const [scheduleModal, setScheduleModal] = useState<DrawerChange | null>(null)
+  const [scheduleDate, setScheduleDate]   = useState('')
   const [pendingChanges, setPendingChanges] = useState<ScheduledChange[]>([])
 
   if (!ledger) {
@@ -197,7 +198,7 @@ export function ConfigEditor() {
     const currentM  = mappings.find(m => m.id === mappingId)
 
     if (ledger.status === 'activo' && originalM?.accountCode && originalM.accountCode !== newCode) {
-      setDrawerChange({
+      setScheduleModal({
         mappingId,
         fieldLabel: currentM?.fieldName || 'Campo',
         oldAccountCode: originalM.accountCode,
@@ -205,6 +206,7 @@ export function ConfigEditor() {
         newAccountCode: newCode,
         newAccountName: newName,
       })
+      setScheduleDate('')
     }
 
     setMappings(prev =>
@@ -212,63 +214,63 @@ export function ConfigEditor() {
     )
   }
 
-  const handleDrawerConfirm = () => {
-    if (!drawerChange || !drawerDate) return
+  const handleScheduleConfirm = () => {
+    if (!scheduleModal || !scheduleDate) return
 
-    const currentM = mappings.find(m => m.id === drawerChange.mappingId)
+    const currentM = mappings.find(m => m.id === scheduleModal.mappingId)
     const change: ScheduledChange = {
       id: crypto.randomUUID(),
       ledgerId: ledger.id,
       ledgerName: ledger.name,
       configId: config?.id || 'pending',
       transactionType: txType,
-      fieldMappingId: drawerChange.mappingId,
-      fieldName: drawerChange.fieldLabel,
-      oldAccountCode: drawerChange.oldAccountCode,
-      oldAccountName: drawerChange.oldAccountName,
-      newAccountCode: drawerChange.newAccountCode,
-      newAccountName: drawerChange.newAccountName,
+      fieldMappingId: scheduleModal.mappingId,
+      fieldName: scheduleModal.fieldLabel,
+      oldAccountCode: scheduleModal.oldAccountCode,
+      oldAccountName: scheduleModal.oldAccountName,
+      newAccountCode: scheduleModal.newAccountCode,
+      newAccountName: scheduleModal.newAccountName,
       nature: currentM?.nature || 'debito',
-      scheduledDate: drawerDate,
+      scheduledDate: scheduleDate,
       createdAt: new Date().toISOString(),
       createdBy: currentUser,
       status: 'pendiente',
     }
 
     setPendingChanges(prev => [
-      ...prev.filter(c => c.fieldMappingId !== drawerChange.mappingId),
+      ...prev.filter(c => c.fieldMappingId !== scheduleModal.mappingId),
       change,
     ])
 
-    // Revert cell to original (the scheduled change will apply on scheduledDate)
-    const originalM = originalMappings.find(m => m.id === drawerChange.mappingId)
+    // Revert cell to original value — the change applies on scheduledDate
+    const originalM = originalMappings.find(m => m.id === scheduleModal.mappingId)
     if (originalM) {
       setMappings(prev =>
         prev.map(m =>
-          m.id === drawerChange.mappingId
+          m.id === scheduleModal.mappingId
             ? { ...m, accountCode: originalM.accountCode, accountName: originalM.accountName }
             : m
         )
       )
     }
 
-    setDrawerChange(null)
-    setDrawerDate('')
+    setScheduleModal(null)
+    setScheduleDate('')
   }
 
-  const handleDrawerCancel = () => {
-    const originalM = originalMappings.find(m => m.id === drawerChange?.mappingId)
+  const handleScheduleCancel = () => {
+    const originalM = originalMappings.find(m => m.id === scheduleModal?.mappingId)
     if (originalM) {
       setMappings(prev =>
         prev.map(m =>
-          m.id === drawerChange?.mappingId
+          m.id === scheduleModal?.mappingId
             ? { ...m, accountCode: originalM.accountCode, accountName: originalM.accountName }
             : m
         )
       )
     }
-    setDrawerChange(null)
-    setDrawerDate('')
+    setScheduleModal(null)
+    setScheduleDate('')
   }
 
   // ─── Save ─────────────────────────────────────────────────────────────────────
@@ -322,8 +324,6 @@ export function ConfigEditor() {
   const removeMapping = (id: string) =>
     setMappings(prev => prev.filter(m => m.id !== id))
 
-  const drawerOpen = !!drawerChange
-
   const cellInput = (value: string, onChange: (v: string) => void, placeholder: string, mono = false) => (
     <input
       value={value}
@@ -351,10 +351,10 @@ export function ConfigEditor() {
         <div className="flex items-start justify-between">
           <div>
             <h1 style={{ fontSize: '28px', fontWeight: 400, color: '#121E6C', margin: 0, lineHeight: '32px' }}>
-              {isNew ? 'Nueva Configuración Contable' : (txType || 'Editar Configuración')}
+              {isNew ? 'Nueva Configuración' : (txType || 'Editar Configuración')}
             </h1>
             <p className="text-sm mt-1" style={{ color: '#606060' }}>
-              {ledger.name} · Configuración Contable
+              {ledger.name} · Configuración Tipo Transacción
             </p>
           </div>
           <Badge status={ledger.status} />
@@ -381,308 +381,123 @@ export function ConfigEditor() {
         </div>
       </Card>
 
-      {/* ─── Table + Drawer ─── */}
-      <div className="flex gap-5 items-start">
-        {/* Main content */}
-        <div className="flex-1 min-w-0 space-y-4">
-          <Card padding={false}>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr style={{ background: '#F1F2F6', borderBottom: '2px solid #F1F2F6' }}>
-                    {['Cuenta auxiliar', 'Descripción', 'CECO / CEBE', 'Naturaleza', 'Campo asociado', 'Nota contable', ''].map(h => (
-                      <th
-                        key={h}
-                        className="text-left px-3 py-3 text-xs font-semibold whitespace-nowrap"
-                        style={{ color: '#121E6C' }}
+      {/* ─── Mappings table ─── */}
+      <Card padding={false} className="mb-4">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr style={{ background: '#F1F2F6', borderBottom: '2px solid #F1F2F6' }}>
+                {['Cuenta auxiliar', 'Descripción', 'CECO / CEBE', 'Naturaleza', 'Campo asociado', 'Nota contable', ''].map(h => (
+                  <th
+                    key={h}
+                    className="text-left px-3 py-3 text-xs font-semibold whitespace-nowrap"
+                    style={{ color: '#121E6C' }}
+                  >
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {mappings.map(m => {
+                const pending = pendingChanges.find(c => c.fieldMappingId === m.id)
+                return (
+                  <tr
+                    key={m.id}
+                    className="border-b border-[#F1F2F6] transition-colors"
+                    style={{ background: pending ? '#FFFBF0' : undefined }}
+                  >
+                    {/* Cuenta auxiliar */}
+                    <td className="px-3 py-2" style={{ minWidth: 200 }}>
+                      <AccountAutocomplete
+                        value={m.accountCode}
+                        label={m.accountName}
+                        onSelect={(code, name) => handleAccountSelect(m.id, code, name)}
+                      />
+                      {pending && (
+                        <div className="flex items-center gap-1 mt-1">
+                          <CalendarClock size={10} color="#5B3100" />
+                          <span className="text-[10px] font-semibold" style={{ color: '#5B3100' }}>
+                            → {pending.newAccountCode} desde {pending.scheduledDate}
+                          </span>
+                        </div>
+                      )}
+                    </td>
+                    {/* Descripción */}
+                    <td className="px-3 py-2" style={{ minWidth: 150 }}>
+                      {cellInput(m.description || '', v => updateMapping(m.id, 'description', v), 'Ventas de terceros')}
+                    </td>
+                    {/* CECO */}
+                    <td className="px-3 py-2" style={{ minWidth: 110 }}>
+                      {cellInput(m.ceco || '', v => updateMapping(m.id, 'ceco', v), 'B1C21000', true)}
+                    </td>
+                    {/* Naturaleza */}
+                    <td className="px-3 py-2" style={{ minWidth: 110 }}>
+                      <select
+                        value={m.nature}
+                        onChange={e => updateMapping(m.id, 'nature', e.target.value as AccountNature)}
+                        className="h-9 px-3 w-full border border-[#969696] text-xs text-[#121E6C] bg-white focus:outline-none focus:border-2 focus:border-[#FF2947] cursor-pointer"
+                        style={{ borderRadius: '8px' }}
                       >
-                        {h}
-                      </th>
-                    ))}
+                        <option value="debito">Débito</option>
+                        <option value="credito">Crédito</option>
+                      </select>
+                    </td>
+                    {/* Campo asociado */}
+                    <td className="px-3 py-2" style={{ minWidth: 150 }}>
+                      {cellInput(m.fieldName, v => updateMapping(m.id, 'fieldName', v), 'amount_principal', true)}
+                    </td>
+                    {/* Nota contable */}
+                    <td className="px-3 py-2" style={{ minWidth: 150 }}>
+                      {cellInput(m.accountingNote || '', v => updateMapping(m.id, 'accountingNote', v), 'Nota contable...')}
+                    </td>
+                    {/* Delete */}
+                    <td className="px-3 py-2">
+                      <button
+                        onClick={() => removeMapping(m.id)}
+                        disabled={mappings.length === 1}
+                        className="p-1.5 rounded-lg transition-colors disabled:opacity-30"
+                        style={{ color: '#969696' }}
+                        onMouseEnter={e => {
+                          (e.currentTarget as HTMLElement).style.background = '#FBF3F5'
+                          ;(e.currentTarget as HTMLElement).style.color = '#910022'
+                        }}
+                        onMouseLeave={e => {
+                          (e.currentTarget as HTMLElement).style.background = 'transparent'
+                          ;(e.currentTarget as HTMLElement).style.color = '#969696'
+                        }}
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {mappings.map(m => {
-                    const pending = pendingChanges.find(c => c.fieldMappingId === m.id)
-                    return (
-                      <tr
-                        key={m.id}
-                        className="border-b border-[#F1F2F6] transition-colors"
-                        style={{ background: pending ? '#FFFBF0' : undefined }}
-                      >
-                        {/* Cuenta auxiliar */}
-                        <td className="px-3 py-2" style={{ minWidth: 200 }}>
-                          <AccountAutocomplete
-                            value={m.accountCode}
-                            label={m.accountName}
-                            onSelect={(code, name) => handleAccountSelect(m.id, code, name)}
-                          />
-                          {pending && (
-                            <div className="flex items-center gap-1 mt-1">
-                              <CalendarClock size={10} color="#5B3100" />
-                              <span className="text-[10px] font-semibold" style={{ color: '#5B3100' }}>
-                                → {pending.newAccountCode} desde {pending.scheduledDate}
-                              </span>
-                            </div>
-                          )}
-                        </td>
-
-                        {/* Descripción */}
-                        <td className="px-3 py-2" style={{ minWidth: 150 }}>
-                          {cellInput(
-                            m.description || '',
-                            v => updateMapping(m.id, 'description', v),
-                            'Ventas de terceros',
-                          )}
-                        </td>
-
-                        {/* CECO/CEBE */}
-                        <td className="px-3 py-2" style={{ minWidth: 110 }}>
-                          {cellInput(
-                            m.ceco || '',
-                            v => updateMapping(m.id, 'ceco', v),
-                            'B1C21000',
-                            true,
-                          )}
-                        </td>
-
-                        {/* Naturaleza */}
-                        <td className="px-3 py-2" style={{ minWidth: 110 }}>
-                          <select
-                            value={m.nature}
-                            onChange={e => updateMapping(m.id, 'nature', e.target.value as AccountNature)}
-                            className="h-9 px-3 w-full border border-[#969696] text-xs text-[#121E6C] bg-white focus:outline-none focus:border-2 focus:border-[#FF2947] cursor-pointer"
-                            style={{ borderRadius: '8px' }}
-                          >
-                            <option value="debito">Débito</option>
-                            <option value="credito">Crédito</option>
-                          </select>
-                        </td>
-
-                        {/* Campo asociado */}
-                        <td className="px-3 py-2" style={{ minWidth: 150 }}>
-                          {cellInput(
-                            m.fieldName,
-                            v => updateMapping(m.id, 'fieldName', v),
-                            'amount_principal',
-                            true,
-                          )}
-                        </td>
-
-                        {/* Nota contable */}
-                        <td className="px-3 py-2" style={{ minWidth: 150 }}>
-                          {cellInput(
-                            m.accountingNote || '',
-                            v => updateMapping(m.id, 'accountingNote', v),
-                            'Nota contable...',
-                          )}
-                        </td>
-
-                        {/* Delete */}
-                        <td className="px-3 py-2">
-                          <button
-                            onClick={() => removeMapping(m.id)}
-                            disabled={mappings.length === 1}
-                            className="p-1.5 rounded-lg transition-colors disabled:opacity-30"
-                            style={{ color: '#969696' }}
-                            onMouseEnter={e => {
-                              (e.currentTarget as HTMLElement).style.background = '#FBF3F5'
-                              ;(e.currentTarget as HTMLElement).style.color = '#910022'
-                            }}
-                            onMouseLeave={e => {
-                              (e.currentTarget as HTMLElement).style.background = 'transparent'
-                              ;(e.currentTarget as HTMLElement).style.color = '#969696'
-                            }}
-                          >
-                            <Trash2 size={15} />
-                          </button>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Add row */}
-            <div className="px-4 py-3 border-t border-[#F1F2F6]">
-              <button
-                onClick={() => setMappings(prev => [...prev, blankMapping()])}
-                className="flex items-center gap-1.5 text-sm font-semibold transition-colors"
-                style={{ color: '#121E6C' }}
-                onMouseEnter={e => (e.currentTarget.style.color = '#FF2947')}
-                onMouseLeave={e => (e.currentTarget.style.color = '#121E6C')}
-              >
-                <Plus size={15} /> Agregar fila
-              </button>
-            </div>
-
-            {errors.mappings && (
-              <div className="px-4 pb-3">
-                <p className="text-xs font-semibold" style={{ color: '#910022' }}>{errors.mappings}</p>
-              </div>
-            )}
-          </Card>
-
-          <BalanceIndicator mappings={mappings} />
+                )
+              })}
+            </tbody>
+          </table>
         </div>
 
-        {/* ─── Drawer ─── */}
-        {drawerOpen && (
-          <div
-            className="shrink-0 sticky top-4 self-start fade-in"
-            style={{
-              width: 340,
-              background: '#FFFFFF',
-              borderRadius: '16px',
-              border: '1px solid #F1F2F6',
-              boxShadow: '0px 8px 32px rgba(18,30,108,0.14)',
-              overflow: 'hidden',
-            }}
+        {/* Add row */}
+        <div className="px-4 py-3 border-t border-[#F1F2F6]">
+          <button
+            onClick={() => setMappings(prev => [...prev, blankMapping()])}
+            className="flex items-center gap-1.5 text-sm font-semibold transition-colors"
+            style={{ color: '#121E6C' }}
+            onMouseEnter={e => (e.currentTarget.style.color = '#FF2947')}
+            onMouseLeave={e => (e.currentTarget.style.color = '#121E6C')}
           >
-            {/* Drawer header */}
-            <div
-              className="flex items-center justify-between px-5 py-4"
-              style={{ borderBottom: '1px solid #F1F2F6' }}
-            >
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-                  style={{ background: '#FFF3D1' }}
-                >
-                  <CalendarClock size={18} color="#5B3100" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold" style={{ color: '#121E6C' }}>Programar cambio</p>
-                  <p className="text-xs" style={{ color: '#606060' }}>Ledger activo — requiere fecha</p>
-                </div>
-              </div>
-              <button
-                onClick={handleDrawerCancel}
-                className="p-1.5 rounded-lg transition-colors"
-                style={{ color: '#969696' }}
-                onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#F1F2F6'}
-                onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}
-              >
-                <X size={17} />
-              </button>
-            </div>
+            <Plus size={15} /> Agregar fila
+          </button>
+        </div>
 
-            {/* Drawer body */}
-            <div className="px-5 py-5 space-y-5">
-              {/* Field name */}
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-widest mb-1" style={{ color: '#969696' }}>
-                  Campo monetario
-                </p>
-                <p className="text-sm font-mono font-semibold" style={{ color: '#3E4983' }}>
-                  {drawerChange?.fieldLabel || 'Sin nombre'}
-                </p>
-              </div>
-
-              {/* Change summary */}
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-widest mb-2" style={{ color: '#969696' }}>
-                  Cambio programado
-                </p>
-                <div className="rounded-xl p-4 space-y-3" style={{ background: '#F7F8FB' }}>
-                  <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-wide mb-1" style={{ color: '#969696' }}>Cuenta actual</p>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-mono text-sm font-bold" style={{ color: '#910022' }}>
-                        {drawerChange?.oldAccountCode}
-                      </span>
-                      <span className="text-xs" style={{ color: '#606060' }}>
-                        {drawerChange?.oldAccountName}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <div className="h-px flex-1" style={{ background: '#E0E2F0' }} />
-                    <ArrowDown size={13} color="#969696" />
-                    <div className="h-px flex-1" style={{ background: '#E0E2F0' }} />
-                  </div>
-
-                  <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-wide mb-1" style={{ color: '#969696' }}>Cuenta nueva</p>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-mono text-sm font-bold" style={{ color: '#1B8959' }}>
-                        {drawerChange?.newAccountCode}
-                      </span>
-                      <span className="text-xs" style={{ color: '#606060' }}>
-                        {drawerChange?.newAccountName}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Date picker */}
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-widest mb-1" style={{ color: '#969696' }}>
-                  Fecha de vigencia
-                </p>
-                <p className="text-xs mb-2" style={{ color: '#606060' }}>
-                  Mín: mañana · Máx: +2 meses
-                </p>
-                <input
-                  type="date"
-                  min={getTomorrow()}
-                  max={getMaxDate()}
-                  value={drawerDate}
-                  onChange={e => setDrawerDate(e.target.value)}
-                  className="w-full h-10 px-3 border border-[#969696] text-sm text-[#121E6C] bg-white focus:outline-none focus:border-2 focus:border-[#FF2947]"
-                  style={{ borderRadius: '12px' }}
-                />
-              </div>
-
-              {/* Already pending in this session */}
-              {pendingChanges.length > 0 && (
-                <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-widest mb-2" style={{ color: '#969696' }}>
-                    Ya programados ({pendingChanges.length})
-                  </p>
-                  <div className="space-y-1.5">
-                    {pendingChanges.map(pc => (
-                      <div
-                        key={pc.id}
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg"
-                        style={{ background: '#F4FDF9' }}
-                      >
-                        <CheckCircle size={11} color="#1B8959" />
-                        <span className="text-xs font-mono" style={{ color: '#1B8959' }}>
-                          {pc.oldAccountCode} → {pc.newAccountCode}
-                        </span>
-                        <span className="text-[10px] ml-auto shrink-0" style={{ color: '#606060' }}>
-                          {pc.scheduledDate}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Drawer footer */}
-            <div
-              className="px-5 py-4 flex gap-3"
-              style={{ borderTop: '1px solid #F1F2F6' }}
-            >
-              <Button variant="secondary" className="flex-1" onClick={handleDrawerCancel}>
-                Cancelar
-              </Button>
-              <Button
-                className="flex-1"
-                onClick={handleDrawerConfirm}
-                disabled={!drawerDate}
-              >
-                Programar
-              </Button>
-            </div>
+        {errors.mappings && (
+          <div className="px-4 pb-3">
+            <p className="text-xs font-semibold" style={{ color: '#910022' }}>{errors.mappings}</p>
           </div>
         )}
-      </div>
+      </Card>
+
+      <BalanceIndicator mappings={mappings} />
 
       {/* ─── Save bar ─── */}
       <div
@@ -700,14 +515,102 @@ export function ConfigEditor() {
           )}
         </div>
         <div className="flex gap-3">
-          <Button variant="secondary" onClick={goBack} disabled={loading}>
-            Cancelar
-          </Button>
-          <Button onClick={handleSave} loading={loading}>
-            Guardar Configuración
-          </Button>
+          <Button variant="secondary" onClick={goBack} disabled={loading}>Cancelar</Button>
+          <Button onClick={handleSave} loading={loading}>Guardar Configuración</Button>
         </div>
       </div>
+
+      {/* ─── Scheduling Modal ─── */}
+      <Modal
+        open={!!scheduleModal}
+        onClose={handleScheduleCancel}
+        title="Programar cambio de cuenta"
+        maxWidth="max-w-md"
+        footer={
+          <>
+            <Button variant="secondary" onClick={handleScheduleCancel}>Cancelar</Button>
+            <Button onClick={handleScheduleConfirm} disabled={!scheduleDate}>Programar</Button>
+          </>
+        }
+      >
+        {scheduleModal && (
+          <div className="space-y-5">
+            {/* Header info */}
+            <div
+              className="flex items-center gap-3 px-4 py-3 rounded-xl"
+              style={{ background: '#FFF3D1' }}
+            >
+              <CalendarClock size={18} color="#5B3100" />
+              <div>
+                <p className="text-sm font-bold" style={{ color: '#121E6C' }}>Ledger activo</p>
+                <p className="text-xs" style={{ color: '#606060' }}>El cambio se aplicará en la fecha seleccionada</p>
+              </div>
+            </div>
+
+            {/* Campo */}
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: '#969696' }}>Campo monetario</p>
+              <p className="text-sm font-mono font-semibold" style={{ color: '#3E4983' }}>{scheduleModal.fieldLabel}</p>
+            </div>
+
+            {/* Change summary */}
+            <div className="rounded-xl p-4 space-y-3" style={{ background: '#F7F8FB' }}>
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wide mb-1" style={{ color: '#969696' }}>Cuenta actual</p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-mono text-sm font-bold" style={{ color: '#910022' }}>{scheduleModal.oldAccountCode}</span>
+                  <span className="text-xs" style={{ color: '#606060' }}>{scheduleModal.oldAccountName}</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="h-px flex-1" style={{ background: '#E0E2F0' }} />
+                <ArrowDown size={13} color="#969696" />
+                <div className="h-px flex-1" style={{ background: '#E0E2F0' }} />
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wide mb-1" style={{ color: '#969696' }}>Cuenta nueva</p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-mono text-sm font-bold" style={{ color: '#1B8959' }}>{scheduleModal.newAccountCode}</span>
+                  <span className="text-xs" style={{ color: '#606060' }}>{scheduleModal.newAccountName}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Date picker */}
+            <div>
+              <p className="text-xs font-semibold mb-1" style={{ color: '#606060' }}>
+                Fecha de vigencia
+                <span className="font-normal ml-1" style={{ color: '#969696' }}>(mín: mañana · máx: +2 meses)</span>
+              </p>
+              <input
+                type="date"
+                min={getTomorrow()}
+                max={getMaxDate()}
+                value={scheduleDate}
+                onChange={e => setScheduleDate(e.target.value)}
+                className="w-full h-11 px-3 border border-[#969696] text-sm text-[#121E6C] bg-white focus:outline-none focus:border-2 focus:border-[#FF2947]"
+                style={{ borderRadius: '12px' }}
+              />
+            </div>
+
+            {/* Already pending */}
+            {pendingChanges.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold mb-2" style={{ color: '#606060' }}>Ya programados ({pendingChanges.length})</p>
+                <div className="space-y-1.5">
+                  {pendingChanges.map(pc => (
+                    <div key={pc.id} className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: '#F4FDF9' }}>
+                      <CheckCircle size={11} color="#1B8959" />
+                      <span className="text-xs font-mono" style={{ color: '#1B8959' }}>{pc.oldAccountCode} → {pc.newAccountCode}</span>
+                      <span className="text-[10px] ml-auto shrink-0" style={{ color: '#606060' }}>{pc.scheduledDate}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </Modal>
     </div>
   )
 }
