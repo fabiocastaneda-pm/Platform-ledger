@@ -9,7 +9,7 @@ import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
-import { Modal } from '../../components/ui/Modal'
+import { Drawer } from '../../components/ui/Drawer'
 import type { FieldMapping, AccountNature, ScheduledChange, AccountingEntryConfig } from '../../types'
 
 // ─── Date helpers ──────────────────────────────────────────────────────────────
@@ -520,12 +520,11 @@ export function ConfigEditor() {
         </div>
       </div>
 
-      {/* ─── Scheduling Modal ─── */}
-      <Modal
+      {/* ─── Scheduling Drawer ─── */}
+      <Drawer
         open={!!scheduleModal}
         onClose={handleScheduleCancel}
         title="Programar cambio de cuenta"
-        maxWidth="max-w-md"
         footer={
           <>
             <Button variant="secondary" onClick={handleScheduleCancel}>Cancelar</Button>
@@ -610,7 +609,7 @@ export function ConfigEditor() {
             )}
           </div>
         )}
-      </Modal>
+      </Drawer>
     </div>
   )
 }
