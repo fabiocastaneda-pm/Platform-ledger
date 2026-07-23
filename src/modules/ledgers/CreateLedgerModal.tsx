@@ -12,8 +12,6 @@ interface Props {
   onClose: () => void
 }
 
-const NAME_REGEX = /^[a-zA-Z0-9_-]+$/
-
 export function CreateLedgerModal({ open, onClose }: Props) {
   const { ledgers, addLedger, addToast, currentUser, selectedCountry } = useAppStore()
   const navigate = useNavigate()
@@ -32,7 +30,6 @@ export function CreateLedgerModal({ open, onClose }: Props) {
     const e: Record<string, string> = {}
     if (!name.trim()) e.name = 'El nombre es obligatorio'
     else if (name.length > 100) e.name = 'Máximo 100 caracteres'
-    else if (!NAME_REGEX.test(name)) e.name = 'Solo letras, números, guiones y underscores'
     else if (ledgers.some(l => l.name === name)) e.name = 'Ya existe un ledger con este nombre'
     if (!company) e.company = 'Selecciona una compañía'
     if (!currency) e.currency = 'Selecciona una moneda'
@@ -91,9 +88,8 @@ export function CreateLedgerModal({ open, onClose }: Props) {
           label="Nombre *"
           value={name}
           onChange={e => { setName(e.target.value); setErrors(p => ({ ...p, name: '' })) }}
-          placeholder="cashout_express_ledger"
+          placeholder="PSE CashIn"
           error={errors.name}
-          helper="Solo letras, números, guiones (-) y underscores (_)"
           maxLength={100}
         />
 

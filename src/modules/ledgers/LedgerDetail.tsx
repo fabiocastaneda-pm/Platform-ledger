@@ -1,24 +1,35 @@
 import { useState } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import { ArrowLeft, ExternalLink, Upload } from 'lucide-react'
+import { ArrowLeft, ExternalLink, Upload, Edit2 } from 'lucide-react'
 import { useAppStore } from '../../store'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { Card } from '../../components/ui/Card'
+import { Modal, ConfirmModal } from '../../components/ui/Modal'
+import { Textarea } from '../../components/ui/Input'
 import { AccountingConfigTab } from '../accounting/AccountingConfigTab'
 import { GeneralConfigTab } from './GeneralConfigTab'
+import { EditLedgerModal } from './EditLedgerModal'
 import { FREQUENCIES, CURRENCIES } from '../../services/mock/ledgers'
 
-const TABS = ['Información General', 'Configuración Contable', 'Configuraciones Generales']
+const TABS = ['Información General', 'Configuración Tipo Transacción', 'Configuraciones Generales']
 
 export function LedgerDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const location = useLocation()
-  const { ledgers } = useAppStore()
+  const { ledgers, updateLedger, addToast } = useAppStore()
   const ledger = ledgers.find(l => l.id === id)
-  const [activeTab, setActiveTab] = useState<number>((location.state as { tab?: number } | null)?.tab ?? 0)
+
+  const [activeTab, setActiveTab] = useState<number>(
+    (location.state as { tab?: number } | null)?.tab ?? 0
+  )
+  const [showEdit, setShowEdit]           = useState(false)
+  const [showActivate, setShowActivate]   = useState(false)
+  const [showDeactivate, setShowDeactivate] = useState(false)
+  const [deactivateReason, setDeactivateReason] = useState('')
+  const [loading, setLoading]             = useState(false)
 
   if (!ledger) {
     return (
@@ -31,9 +42,35 @@ export function LedgerDetail() {
     )
   }
 
+  const handleActivate = async () => {
+    if (ledger.configs.length === 0) {
+      addToast('error', 'El ledger debe tener al menos una configuración contable antes de activarse')
+      setShowActivate(false)
+      return
+    }
+    setLoading(true)
+    await new Promise(r => setTimeout(r, 600))
+    updateLedger(ledger.id, { status: 'activo' })
+    addToast('success', ledger.status === 'inactivo' ? 'Ledger reactivado correctamente' : 'Ledger activado correctamente')
+    setLoading(false)
+    setShowActivate(false)
+  }
+
+  const handleDeactivate = async () => {
+    setLoading(true)
+    await new Promise(r => setTimeout(r, 600))
+    updateLedger(ledger.id, { status: 'inactivo' })
+    addToast('success', 'Ledger desactivado')
+    setLoading(false)
+    setShowDeactivate(false)
+    setDeactivateReason('')
+  }
+
   const formatDate = (d: string) => new Date(d).toLocaleString('es-CO', {
     day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
   })
+
+  const isReactivate = ledger.status === 'inactivo'
 
   return (
     <div className="fade-in">
@@ -46,6 +83,19 @@ export function LedgerDetail() {
         actions={
           <div className="flex gap-3 items-center">
             <Badge status={ledger.status} />
+            {(ledger.status === 'borrador' || ledger.status === 'inactivo') && (
+              <Button onClick={() => setShowActivate(true)}>
+                {isReactivate ? 'Reactivar' : 'Activar'}
+              </Button>
+            )}
+            {ledger.status === 'activo' && (
+              <Button variant="danger" onClick={() => { setShowDeactivate(true); setDeactivateReason('') }}>
+                Desactivar
+              </Button>
+            )}
+            <Button variant="secondary" onClick={() => setShowEdit(true)}>
+              <Edit2 size={15} /> Editar
+            </Button>
           </div>
         }
       />
@@ -147,6 +197,59 @@ export function LedgerDetail() {
 
       {activeTab === 1 && <AccountingConfigTab ledger={ledger} />}
       {activeTab === 2 && <GeneralConfigTab ledger={ledger} />}
+
+      {/* Modals */}
+      <EditLedgerModal ledger={ledger} open={showEdit} onClose={() => setShowEdit(false)} />
+
+      <ConfirmModal
+        open={showActivate}
+        onClose={() => setShowActivate(false)}
+        onConfirm={handleActivate}
+        title={isReactivate ? 'Reactivar Ledger' : 'Activar Ledger'}
+        message={
+          isReactivate
+            ? `El ledger "${ledger.name}" volverá a procesar transacciones. ¿Continuar?`
+            : `El ledger "${ledger.name}" comenzará a procesar transacciones reales. ¿Continuar?`
+        }
+        confirmLabel={isReactivate ? 'Reactivar' : 'Activar'}
+        variant="primary"
+        loading={loading}
+      />
+
+      <Modal
+        open={showDeactivate}
+        onClose={() => { setShowDeactivate(false); setDeactivateReason('') }}
+        title="Desactivar Ledger"
+        maxWidth="max-w-md"
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              onClick={() => { setShowDeactivate(false); setDeactivateReason('') }}
+              disabled={loading}
+            >
+              Cancelar
+            </Button>
+            <Button variant="danger" onClick={handleDeactivate} loading={loading}>
+              Desactivar
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <p className="text-sm" style={{ color: '#6c759f' }}>
+            El ledger <strong>{ledger.name}</strong> dejará de aceptar nuevas transacciones.
+            El historial se preserva.
+          </p>
+          <Textarea
+            label="Motivo de desactivación"
+            value={deactivateReason}
+            onChange={e => setDeactivateReason(e.target.value)}
+            placeholder="Ej: Producto descontinuado, revisión de configuración contable..."
+            rows={3}
+          />
+        </div>
+      </Modal>
     </div>
   )
 }
